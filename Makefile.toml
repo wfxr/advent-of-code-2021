@@ -1,0 +1,37 @@
+[tasks.format]
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--", "--emit=files"]
+
+[tasks.clean]
+command = "cargo"
+args = ["clean"]
+
+[tasks.build]
+command = "cargo"
+args = ["build"]
+dependencies = ["clean"]
+
+[tasks.test]
+command = "cargo"
+args = ["test"]
+dependencies = ["clean"]
+
+[tasks.new]
+script = '''
+#!/usr/bin/env bash
+[ -n "$(git status --porcelain)" ] && echo "abort: working directory is not clean" && exit 1
+mod="$1"
+dir="src/$mod"
+main() {
+    [ -d $dir ] && echo "abort: $dir already exists." && return 1
+    cp -r templates "$dir"
+    sed -i "/+SOLUTIONS+/i \    $mod," src/lib.rs
+    cargo fmt
+}; main; ARG=$?
+if [ $ARG -ne 0 ]; then
+    git clean -q -f $dir
+    git reset -q --hard
+fi
+exit $ARG
+'''
