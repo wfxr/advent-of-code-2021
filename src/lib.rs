@@ -5,6 +5,7 @@ mod testmacros;
 #[rustfmt::skip]
 crate::aoc!(
     day01,
+    day02,
 ); // +SOLUTIONS+
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
