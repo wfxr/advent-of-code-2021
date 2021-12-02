@@ -1,7 +1,7 @@
 use crate::{solution, Result};
 
 fn parse_input(input: &str) -> Result<Vec<u32>> {
-    input.split_ascii_whitespace().map(|s| Ok(s.parse()?)).collect()
+    input.lines().map(|s| Ok(s.parse()?)).collect()
 }
 
 fn part1(input: &str) -> Result<usize> {
