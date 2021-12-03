@@ -24,8 +24,34 @@ fn part1(input: &str) -> Result<usize> {
     Ok(gamma * epsilon)
 }
 
-fn part2(_input: &str) -> Result<usize> {
-    unimplemented!()
+fn part2(input: &str) -> Result<u32> {
+    let seq: Vec<_> = input.lines().collect();
+    let oxygen = life_support_rating(&seq, |len, ones| if ones * 2 >= len { b'1' } else { b'0' })?;
+    let co2 = life_support_rating(&seq, |len, ones| if ones * 2 >= len { b'0' } else { b'1' })?;
+    Ok(oxygen * co2)
 }
 
-solution!(part1 => 841526, part2 => 0);
+fn life_support_rating<F>(seq: &[&str], target_fn: F) -> Result<u32>
+where
+    F: Fn(usize, usize) -> u8,
+{
+    let mut seq: Vec<_> = seq.iter().map(|line| line.as_bytes()).collect();
+    let mut col = 0;
+    while seq.len() > 1 {
+        let mut ones = 0;
+        for c in seq.iter().map(move |line| line[col]) {
+            if c == b'1' {
+                ones += 1;
+            }
+        }
+        let target = target_fn(seq.len(), ones);
+        seq = seq.into_iter().filter(|line| line[col] == target).collect();
+        col += 1;
+    }
+    Ok(match seq.first() {
+        Some(line) => u32::from_str_radix(std::str::from_utf8(line)?, 2)?,
+        None => 0,
+    })
+}
+
+solution!(part1 => 841526, part2 => 4790390);
