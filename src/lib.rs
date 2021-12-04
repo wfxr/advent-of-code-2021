@@ -1,3 +1,5 @@
+#![feature(drain_filter)]
+
 mod macros;
 #[cfg(test)]
 mod testmacros;

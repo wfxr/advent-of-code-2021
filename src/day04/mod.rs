@@ -58,20 +58,14 @@ fn part1(input: &str) -> Result<u32> {
 
 fn part2(input: &str) -> Result<u32> {
     let (seq, mut boards) = parse_input(input)?;
-    let sz = boards.len();
-
-    let mut won = Vec::new();
+    let mut finished = Vec::new();
     for x in seq {
-        for (i, board) in boards.iter_mut().enumerate() {
-            if won.contains(&i) {
-                continue;
-            }
-            board.mark(x);
-            if board.win() {
-                won.push(i);
-                if won.len() == sz {
-                    return Ok(board.score() * x);
-                }
+        boards.iter_mut().for_each(|b| b.mark(x));
+        finished.extend(boards.drain_filter(|b| b.win()));
+        if boards.is_empty() {
+            match finished.last() {
+                Some(board) => return Ok(board.score() * x),
+                None => break,
             }
         }
     }
