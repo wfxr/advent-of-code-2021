@@ -19,23 +19,23 @@ fn parse_input(input: &str) -> Result<Vec<Ins>> {
 }
 
 fn part1(input: &str) -> Result<i32> {
-    let (x, y) = parse_input(input)?
+    let (forward, down) = parse_input(input)?
         .into_iter()
-        .fold((0, 0), |(horizontal, depth), ins| match ins {
-            Forward(n) => (horizontal + n, depth),
-            Down(n) => (horizontal, depth + n),
+        .fold((0, 0), |(forward, down), ins| match ins {
+            Forward(x) => (forward + x, down),
+            Down(x) => (forward, down + x),
         });
-    Ok(x * y)
+    Ok(forward * down)
 }
 
 fn part2(input: &str) -> Result<i32> {
-    let (horizontal, depth, _) = parse_input(input)?
+    let (forward, down, _) = parse_input(input)?
         .into_iter()
-        .fold((0, 0, 0), |(horizontal, depth, aim), ins| match ins {
-            Forward(n) => (horizontal + n, depth + n * aim, aim),
-            Down(n) => (horizontal, depth, aim + n),
+        .fold((0, 0, 0), |(forward, down, aim), ins| match ins {
+            Forward(x) => (forward + x, down + x * aim, aim),
+            Down(x) => (forward, down, aim + x),
         });
-    Ok(horizontal * depth)
+    Ok(forward * down)
 }
 
 solution!(part1 => 1924923, part2 => 1982495697);
