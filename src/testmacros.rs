@@ -25,7 +25,7 @@ macro_rules! solution_test {
         #[test]
         fn $part() -> Result<(), Box<dyn std::error::Error>> {
             let input = include_str!("input");
-            let res = (super::SOLUTION.$part)(&input)?;
+            let res = (super::SOLUTION.$part)(input)?;
             assert_eq!(stringify!($answer).trim_matches(|c| c == '"'), res);
             Ok(())
         }
@@ -39,7 +39,7 @@ macro_rules! solution_bench {
         fn $part(b: &mut test::Bencher) {
             let input = include_str!("input");
             b.iter(|| {
-                (super::SOLUTION.$part)(&input).unwrap();
+                (super::SOLUTION.$part)(input).unwrap();
             })
         }
     };
