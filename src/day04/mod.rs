@@ -5,11 +5,12 @@ const N: usize = 5;
 struct Board(Vec<(u32, bool)>);
 
 impl Board {
-    fn mark(&mut self, x: u32) {
+    fn mark(&mut self, x: u32) -> bool {
         self.0
             .iter_mut()
             .filter(|(e, _)| *e == x)
             .for_each(|(_, marked)| *marked = true);
+        self.win()
     }
 
     fn win(&self) -> bool {
@@ -44,24 +45,21 @@ fn parse_input(input: &str) -> Result<(Vec<u32>, Vec<Board>)> {
 
 fn part1(input: &str) -> Result<u32> {
     let (seq, mut boards) = parse_input(input)?;
-
-    for x in seq {
-        for board in boards.iter_mut() {
-            board.mark(x);
-            if board.win() {
-                return Ok(board.score() * x);
-            }
-        }
-    }
-    Err("no winner".into())
+    seq.into_iter()
+        .find_map(|x| {
+            boards.iter_mut().find_map(|b| match b.mark(x) {
+                true => Some(b.score() * x),
+                false => None,
+            })
+        })
+        .ok_or_else(|| "no winner".into())
 }
 
 fn part2(input: &str) -> Result<u32> {
     let (seq, mut boards) = parse_input(input)?;
     let mut finished = Vec::new();
     for x in seq {
-        boards.iter_mut().for_each(|b| b.mark(x));
-        finished.extend(boards.drain_filter(|b| b.win()));
+        finished.extend(boards.drain_filter(|b| b.mark(x)));
         if boards.is_empty() {
             match finished.last() {
                 Some(board) => return Ok(board.score() * x),
