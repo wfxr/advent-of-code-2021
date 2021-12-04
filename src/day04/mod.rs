@@ -2,24 +2,22 @@ use crate::{solution, Result};
 
 const N: usize = 5;
 
-struct Board {
-    cells: [i32; N * N],
-}
+struct Board([i32; N * N]);
 
 impl Board {
     fn mark(&mut self, x: u32) -> bool {
-        match (0..N * N).find_map(|i| (self.cells[i] == x as i32).then_some(i)) {
+        match (0..N * N).find_map(|i| (self.0[i] == x as i32).then_some(i)) {
             Some(i) => {
-                self.cells[i] = -1;
-                self.cells.iter().skip(i / N * N).take(N).all(|&c| c < 0)
-                    || self.cells.iter().skip(i % N).step_by(N).all(|&c| c < 0)
+                self.0[i] = -1;
+                self.0.iter().skip(i / N * N).take(N).all(|&c| c < 0)
+                    || self.0.iter().skip(i % N).step_by(N).all(|&c| c < 0)
             }
             None => false,
         }
     }
 
     fn score(&self, num: u32) -> u32 {
-        self.cells.iter().filter(|&&x| x > 0).sum::<i32>() as u32 * num
+        self.0.iter().filter(|&&x| x > 0).sum::<i32>() as u32 * num
     }
 }
 
@@ -33,7 +31,7 @@ fn parse_input(input: &str) -> Result<(Vec<u32>, Vec<Board>)> {
         .collect::<Result<_>>()?;
     let boards = input
         .map(|s| s.split_whitespace().map(|x| Ok(x.parse()?)).collect())
-        .map(|cells: Result<Vec<_>>| Ok(Board { cells: cells?.try_into().map_err(|_| "invalid board")? }))
+        .map(|cells: Result<Vec<_>>| Ok(Board(cells?.try_into().map_err(|_| "invalid board")?)))
         .collect::<Result<_>>()?;
     Ok((seq, boards))
 }
