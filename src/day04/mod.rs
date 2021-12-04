@@ -58,16 +58,15 @@ fn part1(input: &str) -> Result<u32> {
 fn part2(input: &str) -> Result<u32> {
     let (seq, mut boards) = parse_input(input)?;
     let mut finished = Vec::new();
-    for x in seq {
-        finished.extend(boards.drain_filter(|b| b.mark(x)));
-        if boards.is_empty() {
-            match finished.last() {
-                Some(board) => return Ok(board.score() * x),
-                None => break,
+    seq.into_iter()
+        .find_map(|x| {
+            finished.extend(boards.drain_filter(|b| b.mark(x)));
+            match (boards.is_empty(), finished.last()) {
+                (true, Some(board)) => Some(board.score() * x),
+                _ => None,
             }
-        }
-    }
-    Err("no winner".into())
+        })
+        .ok_or_else(|| "no winner".into())
 }
 
 solution!(part1 => 38913, part2 => 16836);
