@@ -56,8 +56,26 @@ fn part1(input: &str) -> Result<u32> {
     Err("no winner".into())
 }
 
-fn part2(_input: &str) -> Result<usize> {
-    unimplemented!()
+fn part2(input: &str) -> Result<u32> {
+    let (seq, mut boards) = parse_input(input)?;
+    let sz = boards.len();
+
+    let mut won = Vec::new();
+    for x in seq {
+        for (i, board) in boards.iter_mut().enumerate() {
+            if won.contains(&i) {
+                continue;
+            }
+            board.mark(x);
+            if board.win() {
+                won.push(i);
+                if won.len() == sz {
+                    return Ok(board.score() * x);
+                }
+            }
+        }
+    }
+    Err("no winner".into())
 }
 
-solution!(part1 => 38913, part2 => 0);
+solution!(part1 => 38913, part2 => 16836);
