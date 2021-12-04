@@ -2,18 +2,18 @@ use crate::{solution, Result};
 
 const N: usize = 5;
 
-struct Board(Vec<(u32, bool)>);
+struct Board([Option<u32>; N * N]);
 
 impl Board {
     fn mark(&mut self, x: u32) -> bool {
-        self.0.iter_mut().filter(|(e, _)| *e == x).for_each(|(_, m)| *m = true);
-        let row_marked = |i| self.0.iter().skip(i * N).take(N).all(|&(_, m)| m);
-        let col_marked = |i| self.0.iter().skip(i).step_by(N).all(|&(_, m)| m);
+        self.0.iter_mut().filter(|c| c == &&Some(x)).for_each(|c| *c = None);
+        let row_marked = |i| self.0.iter().skip(i * N).take(N).all(|c| c.is_none());
+        let col_marked = |i| self.0.iter().skip(i).step_by(N).all(|c| c.is_none());
         (0..N).any(|i| row_marked(i) || col_marked(i))
     }
 
     fn score(&self) -> u32 {
-        self.0.iter().map(|&(x, m)| if m { 0 } else { x }).sum()
+        self.0.iter().flatten().sum()
     }
 }
 
@@ -27,11 +27,11 @@ fn parse_input(input: &str) -> Result<(Vec<u32>, Vec<Board>)> {
         .collect::<Result<_>>()?;
     let boards: Vec<_> = input
         .map(|board| {
-            let board = board
+            let board: Vec<_> = board
                 .split_whitespace()
-                .map(|x| Ok((x.parse()?, false)))
-                .collect::<Result<_>>()?;
-            Ok(Board(board))
+                .map(|x| Ok(Some(x.parse()?)))
+                .collect::<Result<Vec<_>>>()?;
+            Ok(Board(board.try_into().map_err(|_| "invalid board")?))
         })
         .collect::<Result<_>>()?;
     Ok((seq, boards))
