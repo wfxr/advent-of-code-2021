@@ -1,5 +1,7 @@
 #![feature(drain_filter)]
 #![feature(bool_to_option)]
+#![feature(test)]
+extern crate test;
 
 mod macros;
 #[cfg(test)]

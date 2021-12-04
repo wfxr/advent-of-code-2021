@@ -33,6 +33,19 @@ macro_rules! solution_test {
 }
 
 #[macro_export]
+macro_rules! solution_bench {
+    ($part:ident) => {
+        #[bench]
+        fn $part(b: &mut test::Bencher) {
+            let input = include_str!("input");
+            b.iter(|| {
+                (super::SOLUTION.$part)(&input).unwrap();
+            })
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! input {
     ($line:expr) => { $line };
     ($line:expr, $($rest:expr),+ $(,)?) => { concat!($line, '\n', input!($($rest),+)) };

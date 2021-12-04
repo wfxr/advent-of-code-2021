@@ -18,9 +18,14 @@ macro_rules! solution {
             part2: |input| $part2(input).map(|x| x.to_string()),
         };
         #[cfg(test)]
-        mod solution {
+        mod test {
             crate::solution_test!(part1 => $expected1);
             crate::solution_test!(part2 => $expected2);
+        }
+        #[cfg(test)]
+        mod bench {
+            crate::solution_bench!(part1);
+            crate::solution_bench!(part2);
         }
     };
 }
