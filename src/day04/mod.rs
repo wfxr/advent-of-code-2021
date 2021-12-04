@@ -3,19 +3,23 @@ use crate::{solution, Result};
 const N: usize = 5;
 
 struct Board {
-    cells: [Option<u32>; N * N],
+    cells: [i32; N * N],
 }
 
 impl Board {
     fn mark(&mut self, x: u32) -> bool {
-        self.cells.iter_mut().filter(|c| *c == &Some(x)).for_each(|c| *c = None);
-        let row_marked = |i| self.cells.iter().skip(i * N).take(N).all(|c| c.is_none());
-        let col_marked = |i| self.cells.iter().skip(i).step_by(N).all(|c| c.is_none());
-        (0..N).any(|i| row_marked(i) || col_marked(i))
+        match (0..N * N).find_map(|i| (self.cells[i] == x as i32).then_some(i)) {
+            Some(i) => {
+                self.cells[i] = -1;
+                self.cells.iter().skip(i / N * N).take(N).all(|&c| c < 0)
+                    || self.cells.iter().skip(i % N).step_by(N).all(|&c| c < 0)
+            }
+            None => false,
+        }
     }
 
-    fn score(&self) -> u32 {
-        self.cells.iter().flatten().sum()
+    fn score(&self, num: u32) -> u32 {
+        self.cells.iter().filter(|&&x| x > 0).sum::<i32>() as u32 * num
     }
 }
 
@@ -28,7 +32,7 @@ fn parse_input(input: &str) -> Result<(Vec<u32>, Vec<Board>)> {
         .map(|x| Ok(x.parse()?))
         .collect::<Result<_>>()?;
     let boards = input
-        .map(|s| s.split_whitespace().map(|x| Ok(Some(x.parse()?))).collect())
+        .map(|s| s.split_whitespace().map(|x| Ok(x.parse()?)).collect())
         .map(|cells: Result<Vec<_>>| Ok(Board { cells: cells?.try_into().map_err(|_| "invalid board")? }))
         .collect::<Result<_>>()?;
     Ok((seq, boards))
@@ -36,22 +40,23 @@ fn parse_input(input: &str) -> Result<(Vec<u32>, Vec<Board>)> {
 
 fn part1(input: &str) -> Result<u32> {
     let (seq, boards) = parse_input(input)?;
-    let stop_after = 0; // stop after first finished
-    play(seq, boards, stop_after)
+    play(seq, boards, 1) // score of 1st winner
 }
 
 fn part2(input: &str) -> Result<u32> {
     let (seq, boards) = parse_input(input)?;
-    let stop_after = boards.len() - 1; // stop after last finished
-    play(seq, boards, stop_after)
+    let last = boards.len();
+    play(seq, boards, last) // score of last winner
 }
 
-fn play(seq: Vec<u32>, mut boards: Vec<Board>, stop_at: usize) -> Result<u32> {
-    let mut finished = Vec::new();
+fn play(seq: Vec<u32>, mut remain: Vec<Board>, nth_won: usize) -> Result<u32> {
+    let all = remain.len();
     seq.into_iter()
         .find_map(|x| {
-            finished.extend(boards.drain_filter(|board| board.mark(x)));
-            finished.get(stop_at).map(|board| board.score() * x)
+            remain
+                .drain_filter(|board| board.mark(x))
+                .last()
+                .and_then(|board| (all - remain.len() == nth_won).then(|| board.score(x)))
         })
         .ok_or_else(|| "no winner".into())
 }

@@ -1,4 +1,5 @@
 #![feature(drain_filter)]
+#![feature(bool_to_option)]
 
 mod macros;
 #[cfg(test)]
