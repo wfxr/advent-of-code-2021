@@ -13,7 +13,8 @@ struct Line {
 }
 
 struct Diagram {
-    cells: Vec<Vec<u32>>,
+    cells:     Vec<Vec<u32>>,
+    overlaped: usize,
 }
 
 impl FromStr for Point {
@@ -44,27 +45,30 @@ impl Diagram {
             .iter()
             .flat_map(|Line { a, b }| [a, b])
             .fold((0, 0), |(rows, cols), &Point { x, y }| (rows.max(y), cols.max(x)));
-        Diagram { cells: vec![vec![0; y_max + 1]; x_max + 1] }
+        Diagram { cells: vec![vec![0; y_max + 1]; x_max + 1], overlaped: 0 }
     }
 
-    fn scan(&mut self, Line { a, b }: &Line) {
+    fn scan(&mut self, Line { a, b }: &Line) -> usize {
         if a.x == b.x {
             let (from, to) = if a.y <= b.y { (a.y, b.y) } else { (b.y, a.y) };
             for y in from..=to {
                 self.cells[a.x][y] += 1;
+                if self.cells[a.x][y] == 2 {
+                    self.overlaped += 1;
+                }
             }
         } else if a.y == b.y {
             let (from, to) = if a.x <= b.x { (a.x, b.x) } else { (b.x, a.x) };
             for x in from..=to {
                 self.cells[x][a.y] += 1;
+                if self.cells[x][a.y] == 2 {
+                    self.overlaped += 1;
+                }
             }
         } else {
             unimplemented!("only horizontal and vertical lines are allowed");
         }
-    }
-
-    fn overlaped(&self) -> usize {
-        self.cells.iter().flatten().filter(|&&x| x > 1).count()
+        self.overlaped
     }
 }
 
@@ -76,16 +80,16 @@ fn part1(input: &str) -> Result<usize> {
     let lines = parse_input(input)?;
     let mut diagram = Diagram::new(&lines);
 
-    lines
+    Ok(lines
         .iter()
         .filter(|&Line { a, b }| a.x == b.x || a.y == b.y)
-        .for_each(|line| diagram.scan(line));
-
-    Ok(diagram.overlaped())
+        .map(|line| diagram.scan(line))
+        .last()
+        .unwrap_or(0))
 }
 
 fn part2(_input: &str) -> Result<usize> {
     unimplemented!()
 }
 
-solution!(part1 => 0, part2 => 0);
+solution!(part1 => 6548, part2 => 0);
