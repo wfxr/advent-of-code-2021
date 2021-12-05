@@ -76,12 +76,8 @@ impl Diagram {
     }
 }
 
-fn parse_input(input: &str) -> Result<Vec<Line>> {
-    input.lines().map(|line| line.parse()).collect()
-}
-
 fn overlaped_points(input: &str, filter: fn(&&Line) -> bool) -> Result<usize> {
-    let lines = parse_input(input)?;
+    let lines: Vec<_> = input.lines().map(str::parse).collect::<Result<_>>()?;
     let mut diagram = Diagram::new(&lines);
     Ok(lines
         .iter()
