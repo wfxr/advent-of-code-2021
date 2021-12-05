@@ -20,22 +20,16 @@ struct Diagram {
 impl FromStr for Point {
     type Err = Box<dyn std::error::Error>;
     fn from_str(s: &str) -> Result<Self> {
-        let mut it = s.split(',').map(|s| s.parse());
-        match (it.next(), it.next()) {
-            (Some(x), Some(y)) => Ok(Point { x: x?, y: y? }),
-            _ => Err("invalid point".into()),
-        }
+        let (x, y) = s.split_once(',').ok_or("invalid point")?;
+        Ok(Point { x: x.trim().parse()?, y: y.trim().parse()? })
     }
 }
 
 impl FromStr for Line {
     type Err = Box<dyn std::error::Error>;
     fn from_str(s: &str) -> Result<Self> {
-        let mut it = s.split("->").map(|s| s.trim().parse());
-        match (it.next(), it.next()) {
-            (Some(a), Some(b)) => Ok(Line { a: a?, b: b? }),
-            _ => Err("invalid line".into()),
-        }
+        let (a, b) = s.split_once("->").ok_or("invalid line")?;
+        Ok(Line { a: a.parse()?, b: b.parse()? })
     }
 }
 
