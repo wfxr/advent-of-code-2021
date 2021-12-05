@@ -6,26 +6,30 @@ struct Board([i32; N * N]);
 
 impl Board {
     fn mark(&mut self, x: u32) -> bool {
-        match (0..N * N).find_map(|i| (self.0[i] == x as i32).then_some(i)) {
-            Some(i) => {
+        (0..N * N)
+            .find_map(|i| (self.0[i] == x as i32).then_some(i))
+            .map(|i| {
                 self.0[i] = -1;
-                self.0.iter().skip(i / N * N).take(N).all(|&c| c < 0)
-                    || self.0.iter().skip(i % N).step_by(N).all(|&c| c < 0)
-            }
-            None => false,
-        }
+                self.row_marked(i / N) || self.col_marked(i % N)
+            })
+            .unwrap_or(false)
     }
 
     fn score(&self, num: u32) -> u32 {
         self.0.iter().filter(|&&x| x > 0).sum::<i32>() as u32 * num
     }
+    fn row_marked(&self, row: usize) -> bool {
+        self.0.iter().skip(row * N).take(N).all(|&c| c < 0)
+    }
+    fn col_marked(&self, col: usize) -> bool {
+        self.0.iter().skip(col).step_by(N).all(|&c| c < 0)
+    }
 }
 
+#[rustfmt::skip]
 fn parse_input(input: &str) -> Result<(Vec<u32>, Vec<Board>)> {
     let mut input = input.split("\n\n");
-    let seq = input
-        .next()
-        .ok_or("missing seq")?
+    let seq = input.next().ok_or("missing seq")?
         .split(',')
         .map(|x| Ok(x.parse()?))
         .collect::<Result<_>>()?;
