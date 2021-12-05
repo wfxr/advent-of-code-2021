@@ -13,7 +13,7 @@ struct Line {
 }
 
 struct Diagram {
-    cells:     Vec<Vec<u32>>,
+    cells:     Vec<Vec<u8>>,
     overlaped: usize,
 }
 
@@ -61,9 +61,9 @@ impl Diagram {
 
     fn scan(&mut self, line: &Line) -> usize {
         line.points().for_each(|Point { x, y }| {
-            self.cells[x][y] += 1;
+            self.cells[x][y] = self.cells[x][y].saturating_add(1);
             if self.cells[x][y] == 2 {
-                self.overlaped += 1;
+                self.overlaped += 1
             }
         });
         self.overlaped
