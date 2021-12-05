@@ -50,11 +50,9 @@ fn part2(input: &str) -> Result<u32> {
 fn play(seq: Vec<u32>, mut remain: Vec<Board>, nth_won: usize) -> Result<u32> {
     let all = remain.len();
     seq.into_iter()
-        .find_map(|x| {
-            remain
-                .drain_filter(|board| board.mark(x))
-                .last()
-                .and_then(|board| (all - remain.len() == nth_won).then(|| board.score(x)))
+        .find_map(|x| match remain.drain_filter(|board| board.mark(x)).last() {
+            Some(board) => (all - remain.len() == nth_won).then(|| board.score(x)),
+            None => None,
         })
         .ok_or_else(|| "no winner".into())
 }
