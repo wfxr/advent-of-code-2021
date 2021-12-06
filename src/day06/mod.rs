@@ -1,25 +1,44 @@
 use crate::{solution, Result};
 
-fn parse_input(input: &str) -> Result<Vec<u8>> {
-    input.split(',').map(|x| Ok(x.trim().parse()?)).collect()
+fn parse_input(input: &str) -> Result<[usize; 10]> {
+    input
+        .split(',')
+        .map(|x| x.trim().parse::<usize>())
+        .try_fold([0; 10], |mut school, fish| {
+            school[fish?] += 1;
+            Ok(school)
+        })
+}
+
+fn count_fish(school: [usize; 10], days: usize) -> usize {
+    (0..10)
+        .cycle()
+        .take(10 * days)
+        .fold(school, |mut school, nth| {
+            let count = school[nth];
+            match nth {
+                0 => {
+                    school[9] += count;
+                    school[7] += count;
+                    school[0] -= count;
+                }
+                x => {
+                    school[x - 1] += count;
+                    school[x] -= count;
+                }
+            }
+            school
+        })
+        .iter()
+        .sum()
 }
 
 fn part1(input: &str) -> Result<usize> {
-    Ok((0..80)
-        .fold(parse_input(input)?, |school, _| {
-            school
-                .into_iter()
-                .flat_map(|fish| match fish {
-                    0 => vec![6, 8],
-                    x => vec![x - 1],
-                })
-                .collect()
-        })
-        .len())
+    Ok(count_fish(parse_input(input)?, 80))
 }
 
-fn part2(_input: &str) -> Result<usize> {
-    unimplemented!()
+fn part2(input: &str) -> Result<usize> {
+    Ok(count_fish(parse_input(input)?, 256))
 }
 
-solution!(part1 => 379414, part2 => 0);
+solution!(part1 => 379414, part2 => 1705008653296);
