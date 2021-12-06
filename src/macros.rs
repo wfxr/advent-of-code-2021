@@ -16,6 +16,7 @@ macro_rules! solution {
         pub(super) const SOLUTION: crate::Solution = crate::Solution {
             part1: |input| $part1(input).map(|x| x.to_string()),
             part2: |input| $part2(input).map(|x| x.to_string()),
+            input: include_str!("input"),
         };
         #[cfg(test)]
         mod test {

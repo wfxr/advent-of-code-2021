@@ -15,16 +15,14 @@ fn try_main() -> Result<()> {
     }
 
     let mut total = Duration::from_secs(0);
-    for (idx, Solution { part1, part2 }) in solutions {
+    for (idx, Solution { part1, part2, input }) in solutions {
         println!("[{}]", idx);
 
-        let input = std::fs::read_to_string(format!("src/{}/input", idx))?;
-
-        let (t, result) = measure(|| part1(&input));
+        let (t, result) = measure(|| part1(input));
         total += t;
         println!("part 1: {:10} - time: {:?}", result?, t);
 
-        let (t, result) = measure(|| part2(&input));
+        let (t, result) = measure(|| part2(input));
         total += t;
         println!("part 2: {:10} - time: {:?}", result?, t);
 
@@ -36,6 +34,7 @@ fn try_main() -> Result<()> {
     Ok(())
 }
 
+#[inline]
 fn measure<T, F>(f: F) -> (Duration, T)
 where
     F: FnOnce() -> T,

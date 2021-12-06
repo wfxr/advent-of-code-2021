@@ -22,4 +22,5 @@ pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 pub struct Solution {
     pub part1: fn(&str) -> Result<String>,
     pub part2: fn(&str) -> Result<String>,
+    pub input: &'static str,
 }
