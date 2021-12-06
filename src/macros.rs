@@ -2,8 +2,8 @@
 macro_rules! aoc {
     ($($day:ident),+ $(,)?) => {
         $(pub mod $day;)*
-        pub fn build_solutions() -> std::collections::HashMap<String, Solution> {
-            let mut solutions = std::collections::HashMap::new();
+        pub fn build_solutions() -> std::collections::BTreeMap<String, Solution> {
+            let mut solutions = std::collections::BTreeMap::new();
             $(solutions.insert(stringify!($day).to_owned(), $day::SOLUTION);)*
             solutions
         }
