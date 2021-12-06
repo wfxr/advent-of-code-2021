@@ -13,21 +13,12 @@ fn parse_input(input: &str) -> Result<[usize; 10]> {
 fn count_fish(school: [usize; 10], days: usize) -> usize {
     (0..10)
         .cycle()
-        .take(10 * days)
-        .fold(school, |mut school, nth| {
-            let count = school[nth];
-            match nth {
-                0 => {
-                    school[9] += count;
-                    school[7] += count;
-                    school[0] -= count;
-                }
-                x => {
-                    school[x - 1] += count;
-                    school[x] -= count;
-                }
-            }
-            school
+        .take(days)
+        .fold(school, |mut s, i| {
+            s[(i + 9) % 10] += s[i];
+            s[(i + 7) % 10] += s[i];
+            s[i] = 0;
+            s
         })
         .iter()
         .sum()
