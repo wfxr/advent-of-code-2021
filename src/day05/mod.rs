@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{iter, str::FromStr};
 
 use crate::{solution, Result};
 
@@ -35,17 +35,15 @@ impl FromStr for Line {
 
 impl Line {
     fn points(&self) -> impl Iterator<Item = Point> {
-        fn range(x1: usize, x2: usize) -> Box<dyn Iterator<Item = usize>> {
-            if x1 <= x2 {
-                Box::new((x1..=x2).cycle())
-            } else {
-                Box::new((x2..=x1).rev().cycle())
-            }
-        }
-        let count = self.a.x.abs_diff(self.b.x).max(self.a.y.abs_diff(self.b.y)) + 1;
-        range(self.a.x, self.b.x)
-            .zip(range(self.a.y, self.b.y))
-            .map(|(x, y)| Point { x, y })
+        let range = |a: isize, b: isize| iter::successors(Some(a), move |&n| Some(n + (b - a).signum()));
+        let ((x1, x2), (y1, y2)) = (
+            (self.a.x as isize, self.b.x as isize),
+            (self.a.y as isize, self.b.y as isize),
+        );
+        let count = x1.abs_diff(x2).max(y1.abs_diff(y2)) + 1;
+        range(x1, x2)
+            .zip(range(y1, y2))
+            .map(|(x, y)| Point { x: x as usize, y: y as usize })
             .take(count)
     }
 }
