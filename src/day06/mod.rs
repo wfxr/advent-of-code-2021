@@ -5,8 +5,8 @@ fn count_fish(input: &str, days: usize) -> Result<usize> {
     for x in input.split(',').map(|x| x.trim().parse::<usize>()) {
         school[x?] += 1
     }
-    for i in (0..9).cycle().take(days) {
-        school[(i + 7) % 9] += school[i] // let the new fish inplace and accumulate the old fish
+    for i in 0..days {
+        school[(i + 7) % 9] += school[i % 9]
     }
     Ok(school.iter().sum())
 }
