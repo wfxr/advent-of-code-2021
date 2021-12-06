@@ -1,22 +1,22 @@
 # [Advent of Code 2021](https://adventofcode.com/2021/stats)
 
-I am trying to write the solutions in an elegant way, without any external dependencies.
+I am trying to write the solutions without any external dependencies.
 
-To run a solution:
+To run solutions:
 
 ```
-cargo run --release <day_number>
+cargo run --release [day_number]
 
 ```
 
 To test solutions:
 
 ```
-cargo test --release [day_number]
+cargo test [day_number]
 ```
 
 To benchmark solutions:
 
 ```
-cargo test --release [day_number]
+cargo bench [day_number]
 ```
