@@ -1,23 +1,21 @@
 use crate::{solution, Result};
 
-fn parse_input(input: &str) -> Result<[usize; 10]> {
+fn parse_input(input: &str) -> Result<[usize; 9]> {
     input
         .split(',')
         .map(|x| x.trim().parse::<usize>())
-        .try_fold([0; 10], |mut school, fish| {
+        .try_fold([0; 9], |mut school, fish| {
             school[fish?] += 1;
             Ok(school)
         })
 }
 
-fn count_fish(school: [usize; 10], days: usize) -> usize {
-    (0..10)
+fn count_fish(school: [usize; 9], days: usize) -> usize {
+    (0..9)
         .cycle()
         .take(days)
         .fold(school, |mut s, i| {
-            s[(i + 9) % 10] += s[i];
-            s[(i + 7) % 10] += s[i];
-            s[i] = 0;
+            s[(i + 7) % 9] += s[i];
             s
         })
         .iter()
