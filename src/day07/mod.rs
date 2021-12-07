@@ -1,5 +1,6 @@
 use crate::{solution, Result};
 
+#[inline]
 fn fuel_cost(input: &str, f: fn(u32) -> u32) -> Result<u32> {
     let input: Vec<u32> = input.split(',').map(|x| Ok(x.trim().parse()?)).collect::<Result<_>>()?;
     let max = *input.iter().max().unwrap_or(&0);
