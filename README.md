@@ -6,7 +6,6 @@ To run solutions:
 
 ```
 cargo run --release [day_number]
-
 ```
 
 To test solutions:
