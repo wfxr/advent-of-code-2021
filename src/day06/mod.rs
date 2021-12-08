@@ -1,13 +1,16 @@
 use crate::{solution, Result};
 
 fn count_fish(input: &str, days: usize) -> Result<usize> {
-    let mut school = [0; 9];
-    for x in input.split(',').map(|x| x.trim().parse::<usize>()) {
-        school[x?] += 1
-    }
-    for i in 0..days {
-        school[(i + 7) % 9] += school[i % 9]
-    }
+    let mut school = input
+        .split(',')
+        .map(|x| x.trim().parse())
+        .try_fold([0; 9], |mut school, x| {
+            x.map(|x: usize| {
+                school[x] += 1;
+                school
+            })
+        })?;
+    (0..days).for_each(|i| school[(i + 7) % 9] += school[i % 9]);
     Ok(school.iter().sum())
 }
 
