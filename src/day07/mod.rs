@@ -7,14 +7,7 @@ fn fuel_cost(input: &str, pos_fn: fn(&mut [u32]) -> u32, fuel_fn: fn(u32) -> u32
 }
 
 fn part1(input: &str) -> Result<u32> {
-    fuel_cost(
-        input,
-        |seq| {
-            let (_, &mut median, _) = seq.select_nth_unstable(seq.len() / 2);
-            median
-        },
-        |d| d,
-    )
+    fuel_cost(input, |seq| *seq.select_nth_unstable(seq.len() / 2).1, |d| d)
 }
 
 fn part2(input: &str) -> Result<u32> {
