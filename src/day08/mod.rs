@@ -22,50 +22,35 @@ fn part1(input: &str) -> Result<usize> {
         .count())
 }
 
-// 0: abc efg
-// 1:   c  f
-// 2: a cde g
-// 3: a cd fg
-// 4:  bcd f
-// 5: ab d fg
-// 6: ab defg
-// 7: a c  f
-// 8: abcdefg
-// 9: abcd fg
 fn part2(input: &str) -> Result<u32> {
-    let input = parse_input(input)?;
-    Ok(input
+    parse_input(input)?
         .into_iter()
         .map(|(patterns, output)| {
-            let with_len = |len| -> _ { patterns.iter().filter(move |x| x.count_ones() == len).copied() };
             let mut map = [0; 1 << 7];
-            let x1 = with_len(2).next().unwrap();
-            let x4 = with_len(4).next().unwrap();
-            let x7 = with_len(3).next().unwrap();
-            let x8 = with_len(7).next().unwrap();
-            let x6 = with_len(6).find(|&x| x & x1 != x1).unwrap();
-            let c = x1 & !(x6 & x1);
-            let x5 = with_len(5).find(|&x| x & c == 0).unwrap();
-            let e = x5 ^ x6;
-            let x9 = with_len(6).find(|&x| x & e == 0).unwrap();
-            let x0 = with_len(6).find(|&x| x != x9 && x != x6).unwrap();
-            let x2 = with_len(5).find(|&x| x & e != 0).unwrap();
-            let x3 = with_len(5).find(|&x| x != x5 && x != x2).unwrap();
+            macro_rules! deduct {
+                ($x:ident => $v:expr, segments = $len:expr $(,cond = $cond:expr)?) => {
+                    let $x = *patterns
+                        .iter()
+                        .find(move |&&x| x.count_ones() == $len $(&& $cond(x))*)
+                        .ok_or_else(|| format!("can not solve '{}'", stringify!($x)))?;
+                    map[$x as usize] = $v;
+                };
+            }
+            deduct!(x1 => 1, segments = 2); //   c  f
+            deduct!(x4 => 4, segments = 4); //  bcd f
+            deduct!(x7 => 7, segments = 3); // a c  f
+            deduct!(x8 => 8, segments = 7); // abcdefg
+            deduct!(x6 => 6, segments = 6, cond = |x| x & x1 != x1); // ab defg
+            let c = x1 & !(x6 & x1); //
+            deduct!(x5 => 5, segments = 5, cond = |x| x & c == 0); // ab d fg
+            let e = x5 ^ x6; //
+            deduct!(x9 => 9, segments = 6, cond = |x| x & e == 0); // abcd fg
+            deduct!(x2 => 2, segments = 5, cond = |x| x & e != 0); // a cde g
+            deduct!(x3 => 3, segments = 5, cond = |x| x != x5 && x != x2); // a cd fg
 
-            map[x0 as usize] = 0;
-            map[x1 as usize] = 1;
-            map[x2 as usize] = 2;
-            map[x3 as usize] = 3;
-            map[x4 as usize] = 4;
-            map[x5 as usize] = 5;
-            map[x6 as usize] = 6;
-            map[x7 as usize] = 7;
-            map[x8 as usize] = 8;
-            map[x9 as usize] = 9;
-
-            output.iter().fold(0, |acc, &x| acc * 10 + map[x as usize])
+            Ok(output.iter().fold(0, |acc, &x| acc * 10 + map[x as usize]))
         })
-        .sum())
+        .sum()
 }
 
 solution!(part1 => 303, part2 => 961734);
