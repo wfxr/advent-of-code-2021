@@ -1,71 +1,57 @@
 use crate::{solution, Result};
-use std::iter::once;
-
-fn parse_input(input: &str) -> Result<Vec<Vec<u8>>> {
-    let len = input.lines().next().ok_or("empty input")?.len();
-    let mut rs = vec![vec![9; len + 2]];
-    for line in input.lines() {
-        rs.push(once(9).chain(line.bytes().map(|b| b - b'0')).chain(once(9)).collect())
-    }
-    rs.push(vec![9; len + 2]);
-    Ok(rs)
-}
 
 fn part1(input: &str) -> Result<u32> {
-    let m = parse_input(input)?;
+    let m: Vec<_> = input.lines().map(|l| l.as_bytes()).collect();
     Ok(m.iter()
         .enumerate()
-        .skip(1)
-        .take(m.len() - 2)
         .map(|(i, row)| {
             row.iter()
                 .enumerate()
-                .skip(1)
-                .take(row.len() - 1)
-                .filter_map(|(j, &x)| {
-                    if x < m[i - 1][j] && x < m[i + 1][j] && x < m[i][j - 1] && x < m[i][j + 1] {
-                        Some(x as u32 + 1)
-                    } else {
-                        None
-                    }
+                .filter(|&(j, &x)| {
+                    (i == 0 || x < m[i - 1][j])
+                        && (i == m.len() - 1 || x < m[i + 1][j])
+                        && (j == 0 || x < m[i][j - 1])
+                        && (j == row.len() - 1 || x < m[i][j + 1])
                 })
+                .map(|(_, &x)| (x - b'0' + 1) as u32)
                 .sum::<u32>()
         })
         .sum())
 }
 
 fn part2(input: &str) -> Result<usize> {
-    let mut m = parse_input(input)?;
-    let rows = m.len() - 2;
-    let cols = m[0].len() - 2;
+    let mut m: Vec<Vec<_>> = input.lines().map(|l| l.bytes().collect()).collect();
     let mut basins = Vec::new();
 
     fn mark_basin(m: &mut [Vec<u8>], i: usize, j: usize) -> usize {
-        let rows = m.len() - 2;
-        let cols = m[0].len() - 2;
-        if m[i][j] == 9 {
-            return 0;
+        match m[i][j] {
+            b'9' => 0,
+            _ => {
+                let mut size = 1;
+                m[i][j] = b'9';
+                if i > 0 {
+                    size += mark_basin(m, i - 1, j);
+                }
+                if j > 0 {
+                    size += mark_basin(m, i, j - 1);
+                }
+                if i < m.len() - 1 {
+                    size += mark_basin(m, i + 1, j)
+                }
+                if j < m[i].len() - 1 {
+                    size += mark_basin(m, i, j + 1);
+                }
+                size
+            }
         }
-        let mut size = 1;
-        m[i][j] = 9;
-        if i > 1 {
-            size += mark_basin(m, i - 1, j);
-        }
-        if j > 1 {
-            size += mark_basin(m, i, j - 1);
-        }
-        if i < rows {
-            size += mark_basin(m, i + 1, j)
-        }
-        if j < cols {
-            size += mark_basin(m, i, j + 1);
-        }
-        size
     }
 
-    for i in 1..=rows {
-        for j in 1..=cols {
-            basins.push(mark_basin(&mut m, i, j))
+    for i in 0..m.len() {
+        for j in 0..m[i].len() {
+            let size = mark_basin(&mut m, i, j);
+            if size != 0 {
+                basins.push(size)
+            }
         }
     }
 
