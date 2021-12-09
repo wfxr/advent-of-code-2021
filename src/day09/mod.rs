@@ -34,8 +34,43 @@ fn part1(input: &str) -> Result<u32> {
         .sum())
 }
 
-fn part2(_input: &str) -> Result<usize> {
-    todo!()
+fn part2(input: &str) -> Result<usize> {
+    let mut m = parse_input(input)?;
+    let rows = m.len() - 2;
+    let cols = m[0].len() - 2;
+    let mut basins = Vec::new();
+
+    fn mark_basin(m: &mut [Vec<u8>], i: usize, j: usize) -> usize {
+        let rows = m.len() - 2;
+        let cols = m[0].len() - 2;
+        if m[i][j] == 9 {
+            return 0;
+        }
+        let mut size = 1;
+        m[i][j] = 9;
+        if i > 1 {
+            size += mark_basin(m, i - 1, j);
+        }
+        if j > 1 {
+            size += mark_basin(m, i, j - 1);
+        }
+        if i < rows {
+            size += mark_basin(m, i + 1, j)
+        }
+        if j < cols {
+            size += mark_basin(m, i, j + 1);
+        }
+        size
+    }
+
+    for i in 1..=rows {
+        for j in 1..=cols {
+            basins.push(mark_basin(&mut m, i, j))
+        }
+    }
+
+    basins.sort_unstable();
+    Ok(basins.iter().rev().take(3).product())
 }
 
-solution!(part1 => 514, part2 => todo!());
+solution!(part1 => 514, part2 => 1103130);
