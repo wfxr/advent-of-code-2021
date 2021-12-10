@@ -3,9 +3,8 @@ use std::{cmp::Reverse, collections::BinaryHeap};
 use crate::{solution, Result};
 
 fn neighbors((i, j): (usize, usize), (maxi, maxj): (usize, usize)) -> impl Iterator<Item = (usize, usize)> {
-    [(0, -1), (0, 1), (-1, 0), (1, 0)]
-        .iter()
-        .map(move |&(di, dj)| ((i as isize + di) as usize, (j as isize + dj) as usize))
+    [(i, j.wrapping_sub(1)), (i, j + 1), (i.wrapping_sub(1), j), (i + 1, j)]
+        .into_iter()
         .filter(move |&(ni, nj)| ni < maxi && nj < maxj)
 }
 
