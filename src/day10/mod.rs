@@ -24,29 +24,30 @@ fn part2(input: &str) -> Result<usize> {
         .lines()
         .filter_map(|line| {
             let mut st = Vec::new();
-            let corrupted = line.chars().any(|c| match c {
-                ')' => !matches!(st.pop(), Some('(')),
-                ']' => !matches!(st.pop(), Some('[')),
-                '}' => !matches!(st.pop(), Some('{')),
-                '>' => !matches!(st.pop(), Some('<')),
-                _ => {
-                    st.push(c);
-                    false
-                }
-            });
-            match (corrupted, st.is_empty()) {
-                (false, false) => Some(st.into_iter().rev().fold(0, |acc, c| {
-                    acc * 5
-                        + match c {
-                            '(' => 1,
-                            '[' => 2,
-                            '{' => 3,
-                            '<' => 4,
-                            _ => 0,
-                        }
-                })),
-                _ => None,
-            }
+            line.chars()
+                .all(|c| match c {
+                    ')' => st.pop() == Some('('),
+                    ']' => st.pop() == Some('['),
+                    '}' => st.pop() == Some('{'),
+                    '>' => st.pop() == Some('<'),
+                    _ => {
+                        st.push(c);
+                        true
+                    }
+                })
+                .then(|| {
+                    st.into_iter().rev().fold(0, |acc, c| {
+                        acc * 5
+                            + match c {
+                                '(' => 1,
+                                '[' => 2,
+                                '{' => 3,
+                                '<' => 4,
+                                _ => 0,
+                            }
+                    })
+                })
+                .filter(|&x| x > 0)
         })
         .collect();
     let middle = scores.len() / 2;
