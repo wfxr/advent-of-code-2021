@@ -1,3 +1,4 @@
+#![allow(clippy::unit_cmp)]
 use crate::{solution, Result};
 
 fn part1(input: &str) -> Result<usize> {
@@ -30,10 +31,7 @@ fn part2(input: &str) -> Result<usize> {
                     ']' => st.pop() == Some('['),
                     '}' => st.pop() == Some('{'),
                     '>' => st.pop() == Some('<'),
-                    _ => {
-                        st.push(c);
-                        true
-                    }
+                    _ => st.push(c) == (),
                 })
                 .then(|| {
                     st.into_iter().rev().fold(0, |acc, c| {
