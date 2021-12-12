@@ -16,20 +16,18 @@ fn parse_input(input: &str) -> Result<Octopuses> {
 }
 
 fn flash(octopuses: &mut Octopuses, pos: usize) -> usize {
-    match octopuses[pos] {
-        -1 => 0,
-        x if x < FLASH_LEVEL => 0,
-        _ => {
-            octopuses[pos] = -1;
-            1 + neighbors(pos)
-                .map(|pos| {
-                    if octopuses[pos] != -1 {
-                        octopuses[pos] += 1;
-                    }
+    if octopuses[pos] < FLASH_LEVEL {
+        0
+    } else {
+        octopuses[pos] = -1;
+        1 + neighbors(pos)
+            .filter_map(|pos| {
+                (octopuses[pos] != -1).then(|| {
+                    octopuses[pos] += 1;
                     flash(octopuses, pos)
                 })
-                .sum::<usize>()
-        }
+            })
+            .sum::<usize>()
     }
 }
 
@@ -47,7 +45,7 @@ fn part1(input: &str) -> Result<usize> {
 
     for _ in 0..100 {
         octopuses.iter_mut().for_each(|x| match *x {
-            -1 => *x += 2,
+            -1 => *x = 1,
             _ => *x += 1,
         });
         count += (0..N * N).map(|pos| flash(&mut octopuses, pos)).sum::<usize>();
@@ -55,8 +53,17 @@ fn part1(input: &str) -> Result<usize> {
     Ok(count)
 }
 
-fn part2(_input: &str) -> Result<usize> {
-    todo!()
+fn part2(input: &str) -> Result<usize> {
+    let mut octopuses = parse_input(input)?;
+    (1..)
+        .find(|_| {
+            octopuses.iter_mut().for_each(|x| match *x {
+                -1 => *x = 1,
+                _ => *x += 1,
+            });
+            (0..N * N).map(|pos| flash(&mut octopuses, pos)).sum::<usize>() == N * N
+        })
+        .ok_or_else(|| "not found".into())
 }
 
-solution!(part1 => 1691, part2 => todo!());
+solution!(part1 => 1691, part2 => 216);
