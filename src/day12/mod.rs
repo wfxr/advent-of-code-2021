@@ -46,43 +46,30 @@ fn parse_input(input: &str) -> Edges {
         })
 }
 
-fn part1(input: &str) -> Result<usize> {
-    fn dfs(edges: &Edges, curr: &Cave) -> usize {
-        let (nodes, count) = &edges[curr];
-        let count = Rc::clone(count);
-        match count.get() {
-            0 => 0,
-            n => {
-                count.set(n - 1);
-                let paths = nodes.iter().map(|x| dfs(edges, x)).sum::<usize>();
-                count.set(n);
-                paths + if curr == &Cave::End { 1 } else { 0 }
+fn dfs(edges: &Edges, curr: &Cave, extra: usize) -> usize {
+    let (nodes, count) = &edges[curr];
+    let count = Rc::clone(count);
+    match (curr, count.get(), extra) {
+        (Cave::Start | Cave::End, 0, _) | (_, 0, 0) => 0,
+        (_, n, mut extra) => {
+            match n {
+                0 => extra -= 1,
+                _ => count.set(n - 1),
             }
+            let paths = nodes.iter().map(|x| dfs(edges, x, extra)).sum::<usize>();
+            if n != 0 {
+                count.set(n)
+            }
+            paths + if curr == &Cave::End { 1 } else { 0 }
         }
     }
-    Ok(dfs(&parse_input(input), &Cave::Start))
+}
+
+fn part1(input: &str) -> Result<usize> {
+    Ok(dfs(&parse_input(input), &Cave::Start, 0))
 }
 
 fn part2(input: &str) -> Result<usize> {
-    fn dfs(edges: &Edges, curr: &Cave, extra: usize) -> usize {
-        let (nodes, count) = &edges[curr];
-        let count = Rc::clone(count);
-        match (curr, count.get(), extra) {
-            (Cave::Start | Cave::End, 0, _) | (_, 0, 0) => 0,
-            (_, n, mut extra) => {
-                match n {
-                    0 => extra -= 1,
-                    _ => count.set(n - 1),
-                }
-                let paths = nodes.iter().map(|x| dfs(edges, x, extra)).sum::<usize>();
-                if n != 0 {
-                    count.set(n)
-                }
-                paths + if curr == &Cave::End { 1 } else { 0 }
-            }
-        }
-    }
     Ok(dfs(&parse_input(input), &Cave::Start, 1))
 }
-
 solution!(part1 => 3421, part2 => 84870);
