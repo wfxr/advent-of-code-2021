@@ -1,41 +1,39 @@
 use crate::{solution, Result};
 use std::{cell::Cell, collections::HashMap, rc::Rc};
 
-type Edges = Vec<(Vec<usize>, Rc<Cell<isize>>)>;
+const START: usize = 0;
+const END: usize = START + 2;
 
-const END: usize = 0;
-const START: usize = 2;
-
-fn parse_input(input: &str) -> Edges {
-    let odd = &mut (1..).step_by(2);
-    let even = &mut (4..).step_by(2);
+fn parse_input(input: &str) -> Vec<(Vec<usize>, Rc<Cell<isize>>)> {
+    let mut small = HashMap::from([("start", START), ("end", END)]);
+    let mut next_small_id = (END + 2..).step_by(2);
     let mut big = HashMap::new();
-    let mut small = HashMap::new();
-    let mut parse_cave = |s| match s {
-        "start" => START,
-        "end" => END,
-        _ if s.chars().any(|c| c.is_uppercase()) => *big.entry(s).or_insert_with(|| odd.next().unwrap()),
-        _ => *small.entry(s).or_insert_with(|| even.next().unwrap()),
-    };
+    let mut next_big_id = (1..).step_by(2);
     input
         .lines()
-        .filter_map(|line| line.split_once('-'))
-        .map(|(l, r)| (parse_cave(l), parse_cave(r)))
+        .filter_map(|line| {
+            let mut iter = line.split('-').map(|s| match s.chars().any(|c| c.is_uppercase()) {
+                true => *big.entry(s).or_insert_with(|| next_big_id.next().unwrap()),
+                false => *small.entry(s).or_insert_with(|| next_small_id.next().unwrap()),
+            });
+            Some((iter.next()?, iter.next()?))
+        })
         .flat_map(|(l, r)| [(l, r), (r, l)])
-        .fold(vec![(vec![], Rc::default()); 32], |mut acc, (from, to)| {
-            let (caves, count) = acc.get_mut(from).unwrap();
+        .fold(Vec::new(), |mut acc, (from, to)| {
+            (acc.len() <= from).then(|| acc.resize_with(from + 1, || (Vec::new(), Rc::default())));
+            let (caves, count) = &mut acc[from];
             caves.push(to);
-            *count = Rc::new(Cell::new(if from % 2 == 1 { -1 } else { 1 }));
+            count.set(if from % 2 == 1 { -1 } else { 1 });
             acc
         })
 }
 
-fn dfs(edges: &Edges, curr: usize, extra: usize) -> usize {
+fn dfs(edges: &[(Vec<usize>, Rc<Cell<isize>>)], curr: usize, extra: usize) -> usize {
     let (nodes, count) = &edges[curr];
     let count = Rc::clone(count);
     match (curr, count.get(), extra) {
         (START | END, 0, _) | (_, 0, 0) => 0,
-        (_, n, mut extra) => {
+        (curr, n, mut extra) => {
             match n {
                 0 => extra -= 1,
                 _ => count.set(n - 1),
