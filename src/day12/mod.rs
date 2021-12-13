@@ -8,28 +8,31 @@ fn parse_input(input: &str) -> Vec<Vec<usize>> {
     let id = input.lines().flat_map(|line| line.split('-')).fold(
         HashMap::from([("start", START), ("end", END)]),
         |mut acc, cave| {
-            let id = acc.len();
-            acc.entry(cave).or_insert(id);
+            let next_id = acc.len();
+            acc.entry(cave).or_insert(next_id);
             acc
         },
     );
 
-    let mut caves = vec![vec![]; id.len()];
-    input
+    let mut caves = input
         .lines()
         .filter_map(|line| line.split_once('-').map(|(l, r)| (id[l], id[r])))
         .flat_map(|(l, r)| [(l, r), (r, l)])
         .filter(|(l, r)| l != &END && r != &START)
-        .for_each(|(l, r)| caves[l].push(r));
+        .fold(vec![vec![]; id.len()], |mut caves, (l, r)| {
+            caves[l].push(r);
+            caves
+        });
 
     // flatten big caves
     id.iter()
         .filter(|&(name, _)| name.chars().any(|c| c.is_uppercase()))
-        .for_each(|(_, &x)| {
-            let smalls = caves[x].clone();
-            caves.iter_mut().filter(|nodes| nodes.contains(&x)).for_each(|nodes| {
-                nodes.drain_filter(|s| s == &x);
-                nodes.extend(smalls.iter());
+        .for_each(|(_, &big)| {
+            let smalls = caves[big].clone();
+            caves.iter_mut().for_each(|nexts| {
+                if let Some(i) = nexts.iter().position(|&next| next == big) {
+                    nexts.splice(i..i + 1, smalls.iter().copied());
+                }
             });
         });
     caves
