@@ -1,58 +1,64 @@
 use crate::{solution, Result};
-use std::{cell::Cell, collections::HashMap, rc::Rc};
+use std::collections::HashMap;
 
 const START: usize = 0;
-const END: usize = START + 2;
+const END: usize = 1;
 
-fn parse_input(input: &str) -> Vec<(Vec<usize>, Rc<Cell<isize>>)> {
-    let mut small = HashMap::from([("start", START), ("end", END)]);
-    let mut next_small_id = (END + 2..).step_by(2);
-    let mut big = HashMap::new();
-    let mut next_big_id = (1..).step_by(2);
-    input
-        .lines()
-        .filter_map(|line| {
-            let mut iter = line.split('-').map(|s| match s.chars().any(|c| c.is_uppercase()) {
-                true => *big.entry(s).or_insert_with(|| next_big_id.next().unwrap()),
-                false => *small.entry(s).or_insert_with(|| next_small_id.next().unwrap()),
-            });
-            Some((iter.next()?, iter.next()?))
-        })
-        .flat_map(|(l, r)| [(l, r), (r, l)])
-        .fold(Vec::new(), |mut acc, (from, to)| {
-            (acc.len() <= from).then(|| acc.resize_with(from + 1, || (Vec::new(), Rc::default())));
-            let (caves, count) = &mut acc[from];
-            caves.push(to);
-            count.set(if from % 2 == 1 { -1 } else { 1 });
+fn parse_input(input: &str) -> Vec<Vec<usize>> {
+    let m = input.lines().flat_map(|line| line.split('-')).fold(
+        HashMap::from([("start", START), ("end", END)]),
+        |mut acc, cave| {
+            let id = acc.len();
+            acc.entry(cave).or_insert(id);
             acc
-        })
+        },
+    );
+    let mut rs: Vec<Vec<usize>> = input
+        .lines()
+        .filter_map(|line| line.split_once('-').map(|(l, r)| (m[l], m[r])))
+        .flat_map(|(l, r)| [(l, r), (r, l)])
+        .fold(Vec::new(), |mut acc, (l, r)| {
+            (acc.len() <= l).then(|| acc.resize(l + 1, Vec::new()));
+            acc[l].push(r);
+            acc
+        });
+    m.iter()
+        .filter(|&(name, _)| name.chars().any(|c| c.is_uppercase()))
+        .for_each(|(_, &x)| {
+            let smalls = rs[x].clone();
+            for nodes in rs.iter_mut() {
+                if nodes.contains(&x) {
+                    nodes.drain_filter(|s| s == &x);
+                    nodes.extend(smalls.iter());
+                }
+            }
+        });
+    rs
 }
 
-fn dfs(edges: &[(Vec<usize>, Rc<Cell<isize>>)], curr: usize, extra: usize) -> usize {
-    let (nodes, count) = &edges[curr];
-    let count = Rc::clone(count);
-    match (curr, count.get(), extra) {
-        (START | END, 0, _) | (_, 0, 0) => 0,
-        (curr, n, mut extra) => {
-            match n {
-                0 => extra -= 1,
-                _ => count.set(n - 1),
-            }
-            let paths = nodes.iter().map(|&x| dfs(edges, x, extra)).sum::<usize>();
-            if n != 0 {
-                count.set(n)
-            }
-            paths + if curr == END { 1 } else { 0 }
+fn dfs(edges: &[Vec<usize>], visited: &mut Vec<bool>, curr: usize, extra: usize) -> usize {
+    edges[curr].iter().fold(0, |acc, &next| match next {
+        next if next == START => acc,
+        next if next == END => acc + 1,
+        next if visited[next] && extra == 0 => acc,
+        next if !visited[next] => {
+            visited[next] = true;
+            let paths = dfs(edges, visited, next, extra);
+            visited[next] = false;
+            acc + paths
         }
-    }
+        next => acc + dfs(edges, visited, next, extra - 1),
+    })
 }
 
 fn part1(input: &str) -> Result<usize> {
-    Ok(dfs(&parse_input(input), START, 0))
+    let edges = parse_input(input);
+    Ok(dfs(&edges, &mut vec![false; edges.len()], START, 0))
 }
 
 fn part2(input: &str) -> Result<usize> {
-    Ok(dfs(&parse_input(input), START, 1))
+    let edges = parse_input(input);
+    Ok(dfs(&edges, &mut vec![false; edges.len()], START, 1))
 }
 
 solution!(part1 => 3421, part2 => 84870);
