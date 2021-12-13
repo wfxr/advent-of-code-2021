@@ -3,42 +3,30 @@ use std::collections::HashSet;
 use crate::{solution, Result};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-struct Point {
-    x: usize,
-    y: usize,
-}
+struct Dot(u32, u32);
 
-impl Point {
-    fn fold(&self, f: Fold) -> Self {
+impl Dot {
+    fn fold_by(&self, f: Fold) -> Self {
         match f {
-            Fold::X(x) => {
-                let x = if self.x < x { self.x } else { x + x - self.x };
-                Self { x, y: self.y }
-            }
-            Fold::Y(y) => {
-                let y = if self.y < y { self.y } else { y + y - self.y };
-                Self { x: self.x, y }
-            }
+            Fold::X(x) => Self(if self.0 < x { self.0 } else { x + x - self.0 }, self.1),
+            Fold::Y(y) => Self(self.0, if self.1 < y { self.1 } else { y + y - self.1 }),
         }
     }
 }
 
 #[derive(Clone, Copy)]
 enum Fold {
-    X(usize),
-    Y(usize),
+    X(u32),
+    Y(u32),
 }
 
-fn parse_input(input: &str) -> Result<(Vec<Point>, Vec<Fold>)> {
-    let (dots, ins) = input.split_once("\n\n").ok_or("missing instructions")?;
+fn parse_input(input: &str) -> Result<(Vec<Dot>, Vec<Fold>)> {
+    let (dots, folds) = input.split_once("\n\n").ok_or("missing fold instructions")?;
     let dots = dots
         .lines()
-        .filter_map(|l| {
-            l.split_once(',')
-                .map(|(x, y)| Ok(Point { x: x.parse()?, y: y.parse()? }))
-        })
+        .filter_map(|l| l.split_once(',').map(|(x, y)| Ok(Dot(x.parse()?, y.parse()?))))
         .collect::<Result<_>>()?;
-    let folds = ins
+    let folds = folds
         .lines()
         .filter_map(|l| {
             l.split_once('=').and_then(|(lhs, rhs)| match lhs.chars().last() {
@@ -53,25 +41,22 @@ fn parse_input(input: &str) -> Result<(Vec<Point>, Vec<Fold>)> {
 
 fn part1(input: &str) -> Result<usize> {
     let (mut dots, folds) = parse_input(input)?;
-    for d in dots.iter_mut() {
-        *d = d.fold(*folds.first().ok_or("empty fold instructions")?)
+    for dot in dots.iter_mut() {
+        *dot = dot.fold_by(*folds.first().ok_or("empty fold instructions")?)
     }
     Ok(dots.iter().collect::<HashSet<_>>().len())
 }
 
 fn part2(input: &str) -> Result<String> {
     let (mut dots, folds) = parse_input(input)?;
-    for d in dots.iter_mut() {
-        *d = folds.iter().fold(*d, |acc, &fold| acc.fold(fold))
-    }
-    let dots: HashSet<_> = dots.iter().collect();
-    let width = dots.iter().max_by_key(|dot| dot.x).map(|dot| dot.x).unwrap_or(0) + 1;
-    let height = dots.iter().max_by_key(|dot| dot.y).map(|dot| dot.y).unwrap_or(0) + 1;
-
-    let s: String = (0..height)
+    dots.iter_mut()
+        .for_each(|dot| *dot = folds.iter().fold(*dot, |dot, &fold| dot.fold_by(fold)));
+    let dots: HashSet<_> = dots.into_iter().collect();
+    let (w, h) = dots.iter().fold((0, 0), |(w, h), &dot| (w.max(dot.0), h.max(dot.1)));
+    Ok((0..=h)
         .map(|y| {
-            (0..width)
-                .map(|x| match dots.contains(&Point { x, y }) {
+            (0..=w)
+                .map(|x| match dots.contains(&Dot(x, y)) {
                     true => '#',
                     false => ' ',
                 })
@@ -80,9 +65,7 @@ fn part2(input: &str) -> Result<String> {
                 .to_string()
         })
         .intersperse(String::from("\n"))
-        .collect();
-
-    Ok(s)
+        .collect())
 }
 
 solution!(part1 => 790, part2 => "
