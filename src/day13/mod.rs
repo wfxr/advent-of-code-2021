@@ -59,8 +59,37 @@ fn part1(input: &str) -> Result<usize> {
     Ok(dots.iter().collect::<HashSet<_>>().len())
 }
 
-fn part2(_input: &str) -> Result<usize> {
-    unimplemented!()
+fn part2(input: &str) -> Result<String> {
+    let (mut dots, folds) = parse_input(input)?;
+    for d in dots.iter_mut() {
+        *d = folds.iter().fold(*d, |acc, &fold| acc.fold(fold))
+    }
+    let dots: HashSet<_> = dots.iter().collect();
+    let width = dots.iter().max_by_key(|dot| dot.x).map(|dot| dot.x).unwrap_or(0) + 1;
+    let height = dots.iter().max_by_key(|dot| dot.y).map(|dot| dot.y).unwrap_or(0) + 1;
+
+    let s: String = (0..height)
+        .map(|y| {
+            (0..width)
+                .map(|x| match dots.contains(&Point { x, y }) {
+                    true => '#',
+                    false => ' ',
+                })
+                .collect::<String>()
+                .trim()
+                .to_string()
+        })
+        .intersperse(String::from("\n"))
+        .collect();
+
+    Ok(s)
 }
 
-solution!(part1 => 790, part2 => todo!());
+solution!(part1 => 790, part2 => "
+###   ##  #  # #### ###  ####   ##  ##
+#  # #  # #  #    # #  # #       # #  #
+#  # #    ####   #  ###  ###     # #
+###  # ## #  #  #   #  # #       # #
+#    #  # #  # #    #  # #    #  # #  #
+#     ### #  # #### ###  #     ##   ##
+");

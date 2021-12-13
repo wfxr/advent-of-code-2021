@@ -1,6 +1,7 @@
 #![feature(drain_filter)]
 #![feature(bool_to_option)]
 #![feature(int_abs_diff)]
+#![feature(iter_intersperse)]
 #![feature(test)]
 extern crate test;
 
