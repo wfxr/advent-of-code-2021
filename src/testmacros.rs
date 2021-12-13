@@ -26,7 +26,10 @@ macro_rules! solution_test {
         fn $part() -> Result<(), Box<dyn std::error::Error>> {
             let input = include_str!("input");
             let res = (super::SOLUTION.$part)(input)?;
-            assert_eq!(stringify!($answer).trim_matches(|c| c == '"').trim(), res);
+            assert_eq!(
+                stringify!($answer).trim_matches(|c| c == '"').trim_matches('\n'),
+                res
+            );
             Ok(())
         }
     };
