@@ -6,12 +6,12 @@ fn parse_input(input: &str) -> Result<Vec<u32>> {
 
 fn part1(input: &str) -> Result<usize> {
     let seq = parse_input(input)?;
-    Ok(seq.windows(2).filter(|w| w[1] > w[0]).count())
+    Ok(seq.array_windows().filter(|[a, b]| a < b).count())
 }
 
 fn part2(input: &str) -> Result<usize> {
     let seq = parse_input(input)?;
-    Ok(seq.windows(4).filter(|w| w[3] > w[0]).count())
+    Ok(seq.array_windows().filter(|[a, _, _, d]| a < d).count())
 }
 
 solution!(part1 => 1390, part2 => 1457);
