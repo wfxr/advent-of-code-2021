@@ -19,7 +19,7 @@ fn solve(input: &str, loops: usize) -> Result<usize> {
         });
 
     let mut curr = [0; N * N];
-    init.array_windows().map(|&[a, b]| a * N + b).for_each(|x| curr[x] += 1);
+    init.array_windows().map(|&[a, b]| a * N + b).for_each(|i| curr[i] += 1);
 
     (0..loops).for_each(|_| {
         let mut next = [0; N * N];
@@ -33,16 +33,16 @@ fn solve(input: &str, loops: usize) -> Result<usize> {
     match init[..] {
         [first, .., last] => {
             let mut counter = [0; N];
-            curr.iter().enumerate().filter(|(_, &n)| n > 0).for_each(|(i, &x)| {
-                counter[left(i)] += x;
-                counter[right(i)] += x;
+            curr.iter().enumerate().filter(|(_, &n)| n > 0).for_each(|(i, &n)| {
+                counter[left(i)] += n;
+                counter[right(i)] += n;
             });
             counter[first] += 1;
             counter[last] += 1;
             let (min, max) = counter
                 .iter()
-                .filter(|&&x| x > 0)
-                .fold((usize::MAX, 0), |(min, max), &x| (min.min(x), max.max(x)));
+                .filter(|&&n| n > 0)
+                .fold((usize::MAX, 0), |(min, max), &n| (min.min(n), max.max(n)));
             Ok((max - min) / 2)
         }
         _ => Ok(0),
