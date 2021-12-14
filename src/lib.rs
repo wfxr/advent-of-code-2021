@@ -2,6 +2,7 @@
 #![feature(bool_to_option)]
 #![feature(int_abs_diff)]
 #![feature(iter_intersperse)]
+#![feature(array_windows)]
 #![feature(test)]
 extern crate test;
 
@@ -24,6 +25,7 @@ crate::aoc!(
     day11,
     day12,
     day13,
+    day14,
 ); // +SOLUTIONS+
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
