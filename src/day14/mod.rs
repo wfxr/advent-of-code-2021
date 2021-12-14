@@ -1,53 +1,55 @@
-use std::{cell::RefCell, iter::once, rc::Rc};
-
 use crate::{solution, Result};
 
-fn parse_input(input: &str) -> Result<(Vec<u8>, Vec<[u8; 3]>)> {
+fn solve(input: &str, loops: usize) -> Result<usize> {
+    let id = |b| (b - b'A') as usize;
     let (template, rules) = input.split_once("\n\n").ok_or("missing rules")?;
-    let template = template.as_bytes().to_vec();
+    let template = template.bytes().map(id).collect::<Vec<_>>();
     let rules = rules
         .lines()
-        .map(|l| {
-            l.bytes()
-                .filter(|c| c.is_ascii_alphabetic())
-                .collect::<Vec<_>>()
-                .try_into()
-                .map_err(|_| "invalid rule".into())
-        })
-        .collect::<Result<_>>()?;
-    Ok((template, rules))
-}
-
-fn part1(input: &str) -> Result<u32> {
-    let (mut template, rules) = parse_input(input)?;
-    for _ in 0..10 {
-        let fold_template: Vec<(u8, Rc<RefCell<Vec<u8>>>)> = template.iter().map(|&c| (c, Rc::default())).collect();
-        rules.iter().for_each(|&[a, b, c]| {
-            fold_template.array_windows().for_each(|[(l, ll), (r, _)]| {
-                if *l == a && *r == b {
-                    ll.borrow_mut().push(c)
-                }
-            });
+        .map(|l| l.as_bytes())
+        .filter_map(|l| Some((l.get(0)?, l.get(1)?, l.get(6)?)))
+        .map(|(&a, &b, &v)| (id(a) * N + id(b), id(v)))
+        .fold([0; N * N], |mut acc, (k, v)| {
+            acc[k] = v;
+            acc
         });
-        template = fold_template
-            .into_iter()
-            .flat_map(|(c, cc)| once(c).chain(cc.borrow().iter().copied()).collect::<Vec<_>>())
-            .collect::<Vec<_>>();
+    let mut pairs = [0; N * N];
+    template
+        .array_windows()
+        .map(|&[a, b]| a * N + b)
+        .for_each(|x| pairs[x] += 1);
+
+    for _ in 0..loops {
+        let mut new_pairs = [0; N * N];
+        for (i, &x) in pairs.iter().enumerate() {
+            new_pairs[i / N * N + rules[i]] += x;
+            new_pairs[rules[i] * N + i % N] += x;
+        }
+        pairs = new_pairs;
     }
 
-    let counter = template.into_iter().fold([0u32; 26], |mut acc, c| {
-        acc[(c - b'A') as usize] += 1;
-        acc
-    });
-
-    Ok(match (counter.iter().max(), counter.iter().filter(|&&x| x > 0).min()) {
-        (Some(max), Some(min)) => max - min,
-        _ => 0,
-    })
+    let mut counter = [0; N];
+    for (i, &x) in pairs.iter().enumerate() {
+        counter[i / N] += x;
+        counter[i % N] += x;
+    }
+    counter[*template.first().unwrap()] += 1;
+    counter[*template.last().unwrap()] += 1;
+    let (min, max) = counter
+        .iter()
+        .filter(|&&x| x > 0)
+        .fold((usize::MAX, 0), |(min, max), &x| (min.min(x), max.max(x)));
+    Ok((max - min) / 2)
 }
 
-fn part2(_input: &str) -> Result<usize> {
-    Ok(0)
+fn part1(input: &str) -> Result<usize> {
+    solve(input, 10)
 }
 
-solution!(part1 => 3247, part2 => todo!());
+const N: usize = 26;
+
+fn part2(input: &str) -> Result<usize> {
+    solve(input, 40)
+}
+
+solution!(part1 => 3247, part2 => 4110568157153);
