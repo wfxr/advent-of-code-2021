@@ -21,17 +21,17 @@ fn solve(input: &str, loops: usize) -> Result<usize> {
     let mut curr = [0; N * N];
     init.array_windows().map(|&[a, b]| a * N + b).for_each(|x| curr[x] += 1);
 
-    for _ in 0..loops {
+    (0..loops).for_each(|_| {
         let mut next = [0; N * N];
-        for (i, &n) in curr.iter().enumerate() {
+        curr.iter().enumerate().filter(|(_, &n)| n > 0).for_each(|(i, &n)| {
             next[left(i) * N + trans[i]] += n;
             next[trans[i] * N + right(i)] += n;
-        }
+        });
         curr = next;
-    }
+    });
 
     let mut counter = [0; N];
-    curr.iter().enumerate().for_each(|(i, &x)| {
+    curr.iter().enumerate().filter(|(_, &n)| n > 0).for_each(|(i, &x)| {
         counter[left(i)] += x;
         counter[right(i)] += x;
     });
