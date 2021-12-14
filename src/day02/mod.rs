@@ -6,36 +6,38 @@ enum Ins {
     Down(i32),
 }
 
-fn parse_input(input: &str) -> Result<Vec<Ins>> {
+fn parse_input(input: &str) -> impl Iterator<Item = Result<Ins>> + '_ {
     input
         .lines()
-        .map(|line| match line.split_ascii_whitespace().collect::<Vec<_>>()[..] {
-            ["forward", x] => Ok(Forward(x.parse()?)),
-            ["up", x] => Ok(Down(-x.parse()?)),
-            ["down", x] => Ok(Down(x.parse()?)),
-            _ => Err(format!("invalid input: {}", line).into()),
+        .filter_map(|l| l.split_once(' '))
+        .map(|(ins, x)| match (ins, x.parse()?) {
+            ("forward", x) => Ok(Forward(x)),
+            ("up", x) => Ok(Down(-x)),
+            ("down", x) => Ok(Down(x)),
+            _ => Err(format!("invalid instruction: {}", ins).into()),
         })
-        .collect()
 }
 
 fn part1(input: &str) -> Result<i32> {
-    let (forward, down) = parse_input(input)?
-        .into_iter()
-        .fold((0, 0), |(forward, down), ins| match ins {
-            Forward(x) => (forward + x, down),
-            Down(x) => (forward, down + x),
-        });
-    Ok(forward * down)
+    parse_input(input)
+        .try_fold((0, 0), |(forward, down), ins| {
+            ins.map(|ins| match ins {
+                Forward(x) => (forward + x, down),
+                Down(x) => (forward, down + x),
+            })
+        })
+        .map(|(forward, down)| forward * down)
 }
 
 fn part2(input: &str) -> Result<i32> {
-    let (forward, down, _) = parse_input(input)?
-        .into_iter()
-        .fold((0, 0, 0), |(forward, down, aim), ins| match ins {
-            Forward(x) => (forward + x, down + x * aim, aim),
-            Down(x) => (forward, down, aim + x),
-        });
-    Ok(forward * down)
+    parse_input(input)
+        .try_fold((0, 0, 0), |(forward, down, aim), ins| {
+            ins.map(|ins| match ins {
+                Forward(x) => (forward + x, down + x * aim, aim),
+                Down(x) => (forward, down, aim + x),
+            })
+        })
+        .map(|(forward, down, _)| forward * down)
 }
 
 solution!(part1 => 1924923, part2 => 1982495697);
