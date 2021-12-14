@@ -1,6 +1,5 @@
-use std::collections::HashSet;
-
 use crate::{solution, Result};
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 struct Dot(usize, usize);
@@ -49,15 +48,15 @@ fn part2(input: &str) -> Result<String> {
     folds.iter().for_each(|fold| fold.fold(&mut dots));
     let (w, h) = dots.iter().fold((0, 0), |(w, h), &dot| (w.max(dot.0), h.max(dot.1)));
     let mut buf = vec![vec!['.'; w + 1]; h + 1];
-    dots.into_iter().for_each(|Dot(x, y)| buf[y][x] = '#');
+    dots.into_iter().for_each(|Dot(x, y)| buf[y][x] = '█');
     Ok(buf.into_iter().intersperse(vec!['\n']).flatten().collect())
 }
 
 solution!(part1 => 790, part2 => "
-###...##..#..#.####.###..####...##..##.
-#..#.#..#.#..#....#.#..#.#.......#.#..#
-#..#.#....####...#..###..###.....#.#...
-###..#.##.#..#..#...#..#.#.......#.#...
-#....#..#.#..#.#....#..#.#....#..#.#..#
-#.....###.#..#.####.###..#.....##...##.
+███...██..█..█.████.███..████...██..██.
+█..█.█..█.█..█....█.█..█.█.......█.█..█
+█..█.█....████...█..███..███.....█.█...
+███..█.██.█..█..█...█..█.█.......█.█...
+█....█..█.█..█.█....█..█.█....█..█.█..█
+█.....███.█..█.████.███..█.....██...██.
 ");
