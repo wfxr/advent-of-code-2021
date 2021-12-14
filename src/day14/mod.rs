@@ -29,10 +29,10 @@ fn solve(input: &str, loops: usize) -> Result<usize> {
     }
 
     let mut counter = [0; N];
-    for (i, &x) in pairs.iter().enumerate() {
+    pairs.iter().enumerate().for_each(|(i, &x)| {
         counter[i / N] += x;
         counter[i % N] += x;
-    }
+    });
     counter[*template.first().unwrap()] += 1;
     counter[*template.last().unwrap()] += 1;
     let (min, max) = counter
