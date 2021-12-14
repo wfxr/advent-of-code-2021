@@ -30,18 +30,23 @@ fn solve(input: &str, loops: usize) -> Result<usize> {
         curr = next;
     });
 
-    let mut counter = [0; N];
-    curr.iter().enumerate().filter(|(_, &n)| n > 0).for_each(|(i, &x)| {
-        counter[left(i)] += x;
-        counter[right(i)] += x;
-    });
-    counter[*init.first().unwrap()] += 1;
-    counter[*init.last().unwrap()] += 1;
-    let (min, max) = counter
-        .iter()
-        .filter(|&&x| x > 0)
-        .fold((usize::MAX, 0), |(min, max), &x| (min.min(x), max.max(x)));
-    Ok((max - min) / 2)
+    match init[..] {
+        [first, .., last] => {
+            let mut counter = [0; N];
+            curr.iter().enumerate().filter(|(_, &n)| n > 0).for_each(|(i, &x)| {
+                counter[left(i)] += x;
+                counter[right(i)] += x;
+            });
+            counter[first] += 1;
+            counter[last] += 1;
+            let (min, max) = counter
+                .iter()
+                .filter(|&&x| x > 0)
+                .fold((usize::MAX, 0), |(min, max), &x| (min.min(x), max.max(x)));
+            Ok((max - min) / 2)
+        }
+        _ => Ok(0),
+    }
 }
 
 fn part1(input: &str) -> Result<usize> {
