@@ -1,9 +1,9 @@
 use crate::{solution, Result};
 use std::{cmp::Reverse, collections::BinaryHeap};
 
-type Map<const N: usize> = [[u8; N]; N];
+const N: usize = 100;
 
-fn parse_input<const N: usize>(input: &str) -> Result<Map<N>> {
+fn parse_input<const N: usize>(input: &str) -> Result<[[u8; N]; N]> {
     input
         .lines()
         .map(|l| {
@@ -15,20 +15,12 @@ fn parse_input<const N: usize>(input: &str) -> Result<Map<N>> {
         })
         .collect::<Result<Vec<_>>>()?
         .try_into()
-        .map_err(|_| "invalid input".into())
+        .map_err(|_| "invalid map".into())
 }
 
-fn part1(input: &str) -> Result<u32> {
-    Ok(shortest_path(&mut parse_input::<100>(input)?))
-}
-
-fn part2(_input: &str) -> Result<usize> {
-    todo!()
-}
-
-fn shortest_path<const N: usize>(m: &mut Map<N>) -> u32 {
-    let mut heap = BinaryHeap::from([(Reverse(0), (0, 0))]);
-    while let Some((Reverse(risk), (i, j))) = heap.pop() {
+fn lowest_risk<const N: usize>(m: &mut [[u8; N]; N]) -> u32 {
+    let mut h = BinaryHeap::from([(Reverse(0), (0, 0))]);
+    while let Some((Reverse(risk), (i, j))) = h.pop() {
         if (i, j) == (N - 1, N - 1) {
             return risk;
         }
@@ -37,7 +29,7 @@ fn shortest_path<const N: usize>(m: &mut Map<N>) -> u32 {
             .filter(|&(i, j)| i < N && j < N)
             .for_each(|(i, j)| {
                 if m[i][j] > 0 {
-                    heap.push((Reverse(risk + m[i][j] as u32), (i, j)));
+                    h.push((Reverse(risk + m[i][j] as u32), (i, j)));
                     m[i][j] = 0;
                 }
             })
@@ -45,4 +37,18 @@ fn shortest_path<const N: usize>(m: &mut Map<N>) -> u32 {
     0
 }
 
-solution!(part1 => 462, part2 => todo!());
+fn part1(input: &str) -> Result<u32> {
+    Ok(lowest_risk(&mut parse_input::<N>(input)?))
+}
+
+fn part2(input: &str) -> Result<u32> {
+    const SCALE: usize = 5;
+    let small = parse_input::<N>(input)?;
+    let mut large = [[0; SCALE * N]; SCALE * N];
+    (0..N * SCALE)
+        .flat_map(|i| (0..N * SCALE).map(move |j| (i, j, i / N + j / N)))
+        .for_each(|(i, j, k)| large[i][j] = ((small[i % N][j % N] as usize + k - 1) % 9) as u8 + 1);
+    Ok(lowest_risk(&mut large))
+}
+
+solution!(part1 => 462, part2 => 2846);
