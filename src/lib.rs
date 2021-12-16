@@ -3,6 +3,7 @@
 #![feature(int_abs_diff)]
 #![feature(iter_intersperse)]
 #![feature(array_windows)]
+#![feature(explicit_generic_args_with_impl_trait)]
 #![feature(test)]
 extern crate test;
 
@@ -27,6 +28,7 @@ crate::aoc!(
     day13,
     day14,
     day15,
+    day16,
 ); // +SOLUTIONS+
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
