@@ -1,47 +1,46 @@
 use crate::{solution, Result};
-use std::iter;
 
 enum Packet {
-    Literal { ver: u32, _val: u64 },
-    Operator { ver: u32, _tag: u32, subs: Vec<Packet> },
+    Literal { ver: u32, val: u64 },
+    Operator { ver: u32, tag: u32, subs: Vec<Packet> },
 }
 
 fn parse_input(s: &str) -> Option<Packet> {
-    fn next_int<const N: u32>(iter: &mut impl Iterator<Item = u32>) -> Option<u32> {
+    fn read<const N: u32>(iter: &mut impl Iterator<Item = u32>) -> Option<u32> {
         let mut ret = 0;
         for _ in 0..N {
-            ret = 2 * ret + iter.next()?;
+            ret = ret << 1 | iter.next()?;
         }
         Some(ret)
     }
     fn parse_packet(iter: &mut impl Iterator<Item = u32>) -> Option<Packet> {
-        let ver = next_int::<3>(iter)?;
-        let tag = next_int::<3>(iter)?;
+        let ver = read::<3>(iter)?;
+        let tag = read::<3>(iter)?;
         match tag {
             4 => {
                 let mut val = 0;
                 loop {
                     let num = iter.next()?;
-                    val = 16 * val + next_int::<4>(iter)? as u64;
+                    val = 16 * val + read::<4>(iter)? as u64;
                     if num == 0 {
                         break;
                     }
                 }
-                Some(Packet::Literal { ver, _val: val })
+                Some(Packet::Literal { ver, val })
             }
             _ => {
                 let subs: Vec<_> = match iter.next()? {
                     0 => {
-                        let n = next_int::<15>(iter)? as usize;
+                        let n = read::<15>(iter)? as usize;
                         let mut iter = iter.take(n).collect::<Vec<_>>().into_iter();
-                        iter::from_fn(|| parse_packet(&mut iter)).collect()
+                        std::iter::from_fn(|| parse_packet(&mut iter)).collect()
                     }
                     _ => {
-                        let n = next_int::<11>(iter)?;
+                        let n = read::<11>(iter)?;
                         (0..n).map(|_| parse_packet(iter)).collect::<Option<_>>()?
                     }
                 };
-                Some(Packet::Operator { ver, _tag: tag, subs })
+                Some(Packet::Operator { ver, tag, subs })
             }
         }
     }
@@ -59,24 +58,54 @@ fn sum_versions(packet: &Packet) -> u32 {
     }
 }
 
+fn eval(packet: &Packet) -> Result<u64> {
+    let bool2int = |v| if v { 1 } else { 0 };
+    Ok(match packet {
+        Packet::Literal { val, .. } => *val,
+        Packet::Operator { tag, subs, .. } => match tag {
+            0 => subs.iter().map(eval).sum::<Result<_>>()?,
+            1 => subs.iter().map(eval).product::<Result<_>>()?,
+            2 => subs.iter().try_fold(u64::MAX, |min, x| eval(x).map(|v| v.min(min)))?,
+            3 => subs.iter().try_fold(u64::MIN, |min, x| eval(x).map(|v| v.max(min)))?,
+            5 => bool2int(eval(subs.get(0).ok_or("no lhs")?)? > eval(subs.get(1).ok_or("no rhs")?)?),
+            6 => bool2int(eval(subs.get(0).ok_or("no lhs")?)? < eval(subs.get(1).ok_or("no rhs")?)?),
+            7 => bool2int(eval(subs.get(0).ok_or("no lhs")?)? == eval(subs.get(1).ok_or("no rhs")?)?),
+            x => return Err(format!("unexpected type id: {}", x).into()),
+        },
+    })
+}
+
 fn part1(input: &str) -> Result<u32> {
     parse_input(input)
         .ok_or_else(|| "can not decode".into())
         .map(|packet| sum_versions(&packet))
 }
 
-fn part2(_input: &str) -> Result<usize> {
-    todo!()
+fn part2(input: &str) -> Result<u64> {
+    parse_input(input)
+        .ok_or_else(|| "can not decode".into())
+        .and_then(|packet| eval(&packet))
 }
 
-solution!(part1 => 871, part2 => todo!());
+solution!(part1 => 871, part2 => 68703010504);
 
 #[cfg(test)]
 mod example {
     crate::test!(part1,
-        t1: "8A004A801A8002F478" => 16,
-        t2: "620080001611562C8802118E34" => 12,
-        t3: "C0015000016115A2E0802F182340" => 23,
+        t1: "8A004A801A8002F478"             => 16,
+        t2: "620080001611562C8802118E34"     => 12,
+        t3: "C0015000016115A2E0802F182340"   => 23,
         t4: "A0016C880162017C3686B18A3D4780" => 31,
+    );
+
+    crate::test!(part2,
+        t1: "C200B40A82"                 => 3,
+        t2: "04005AC33890"               => 54,
+        t3: "880086C3E88112"             => 7,
+        t4: "CE00C43D881120"             => 9,
+        t5: "D8005AC2A8F0"               => 1,
+        t6: "F600BC2D8F"                 => 0,
+        t7: "9C005AC2F8F0"               => 0,
+        t8: "9C0141080250320F1802104A08" => 1,
     );
 }
