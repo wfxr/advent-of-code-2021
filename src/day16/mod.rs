@@ -21,7 +21,7 @@ fn parse_input(s: &str) -> Option<Packet> {
                 let mut val = 0;
                 loop {
                     let num = iter.next()?;
-                    val = 16 * val + read::<4>(iter)? as u64;
+                    val = (val << 4) + read::<4>(iter)? as u64;
                     if num == 0 {
                         break;
                     }
@@ -59,7 +59,6 @@ fn sum_versions(packet: &Packet) -> u32 {
 }
 
 fn eval(packet: &Packet) -> Result<u64> {
-    let bool2int = |v| if v { 1 } else { 0 };
     Ok(match packet {
         Packet::Literal { val, .. } => *val,
         Packet::Operator { tag, subs, .. } => match tag {
@@ -67,9 +66,9 @@ fn eval(packet: &Packet) -> Result<u64> {
             1 => subs.iter().map(eval).product::<Result<_>>()?,
             2 => subs.iter().try_fold(u64::MAX, |min, x| eval(x).map(|v| v.min(min)))?,
             3 => subs.iter().try_fold(u64::MIN, |min, x| eval(x).map(|v| v.max(min)))?,
-            5 => bool2int(eval(subs.get(0).ok_or("no lhs")?)? > eval(subs.get(1).ok_or("no rhs")?)?),
-            6 => bool2int(eval(subs.get(0).ok_or("no lhs")?)? < eval(subs.get(1).ok_or("no rhs")?)?),
-            7 => bool2int(eval(subs.get(0).ok_or("no lhs")?)? == eval(subs.get(1).ok_or("no rhs")?)?),
+            5 => (eval(subs.get(0).ok_or("no lhs")?)? > eval(subs.get(1).ok_or("no rhs")?)?) as u64,
+            6 => (eval(subs.get(0).ok_or("no lhs")?)? < eval(subs.get(1).ok_or("no rhs")?)?) as u64,
+            7 => (eval(subs.get(0).ok_or("no lhs")?)? == eval(subs.get(1).ok_or("no rhs")?)?) as u64,
             x => return Err(format!("unexpected type id: {}", x).into()),
         },
     })
