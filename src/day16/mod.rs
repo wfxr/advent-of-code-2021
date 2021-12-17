@@ -6,14 +6,14 @@ enum Packet {
 }
 
 fn parse_input(s: &str) -> Option<Packet> {
-    fn read<const N: u32>(iter: &mut impl Iterator<Item = u32>) -> Option<u32> {
+    fn read<const N: u32>(iter: &mut dyn Iterator<Item = u32>) -> Option<u32> {
         let mut ret = 0;
         for _ in 0..N {
             ret = ret << 1 | iter.next()?;
         }
         Some(ret)
     }
-    fn parse_packet(iter: &mut impl Iterator<Item = u32>) -> Option<Packet> {
+    fn parse_packet(iter: &mut dyn Iterator<Item = u32>) -> Option<Packet> {
         let ver = read::<3>(iter)?;
         let tag = read::<3>(iter)?;
         match tag {
@@ -32,7 +32,7 @@ fn parse_input(s: &str) -> Option<Packet> {
                 let subs: Vec<_> = match iter.next()? {
                     0 => {
                         let n = read::<15>(iter)? as usize;
-                        let mut iter = iter.take(n).collect::<Vec<_>>().into_iter();
+                        let mut iter = iter.take(n);
                         std::iter::from_fn(|| parse_packet(&mut iter)).collect()
                     }
                     _ => {
