@@ -1,6 +1,10 @@
 # [Advent of Code 2021](https://adventofcode.com/2021/stats)
 
-I am trying to write the solutions without any external dependencies.
+I am trying to write the solutions
+
+- without `unwrap`
+- without `unsafe`
+- without dependencies
 
 To run solutions:
 
