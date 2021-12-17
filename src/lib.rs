@@ -29,6 +29,7 @@ crate::aoc!(
     day14,
     day15,
     day16,
+    day17,
 ); // +SOLUTIONS+
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
