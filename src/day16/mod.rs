@@ -20,9 +20,9 @@ fn parse_input(s: &str) -> Option<Packet> {
             4 => {
                 let mut val = 0;
                 loop {
-                    let num = iter.next()?;
-                    val = (val << 4) + read::<4>(iter)? as u64;
-                    if num == 0 {
+                    let b = iter.next()?;
+                    val = (val << 4) | read::<4>(iter)? as u64;
+                    if b == 0 {
                         break;
                     }
                 }
