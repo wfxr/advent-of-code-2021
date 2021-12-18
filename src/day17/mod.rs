@@ -1,25 +1,23 @@
 use crate::{solution, Result};
 
-fn parse_input(input: &str) -> Result<((i32, i32), (i32, i32))> {
-    match input
+fn parse_input(input: &str) -> Result<[i32; 4]> {
+    input
         .split(|c: char| !matches!(c, '0'..='9' | '-'))
         .filter(|s| !s.is_empty())
         .map(|s| Ok(s.parse()?))
-        .collect::<Result<Vec<_>>>()?[..]
-    {
-        [a, b, c, d] => Ok(((a, b), (c, d))),
-        _ => Err("invalid input".into()),
-    }
+        .collect::<Result<Vec<_>>>()?
+        .try_into()
+        .map_err(|_| "invalid input".into())
 }
 
 fn part1(input: &str) -> Result<i32> {
-    let (_, (y_min, _)) = parse_input(input)?;
-    let vy_max = (y_min + 1).abs();
+    let [_, _, y_min, _] = parse_input(input)?;
+    let vy_max = -y_min - 1;
     Ok(vy_max * (vy_max + 1) / 2)
 }
 
 fn part2(input: &str) -> Result<usize> {
-    let ((x_min, x_max), (y_min, y_max)) = parse_input(input)?;
+    let [x_min, x_max, y_min, y_max] = parse_input(input)?;
     let hit_target = |&(mut vx, mut vy): &(i32, i32)| {
         let (mut x, mut y) = (0, 0);
         while x <= x_max && y >= y_min {
@@ -28,9 +26,7 @@ fn part2(input: &str) -> Result<usize> {
             if (x_min..=x_max).contains(&x) && (y_min..=y_max).contains(&y) {
                 return true;
             }
-            if vx > 0 {
-                vx -= 1;
-            }
+            vx = (vx - 1).max(0);
             vy -= 1;
         }
         false
