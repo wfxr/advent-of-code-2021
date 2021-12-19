@@ -1,5 +1,4 @@
 use crate::{solution, Result};
-use std::str::FromStr;
 use Number::*;
 
 #[derive(Clone)]
@@ -78,24 +77,18 @@ impl Number {
     }
 }
 
-impl FromStr for Number {
-    type Err = Box<dyn std::error::Error>;
-
-    fn from_str(s: &str) -> Result<Self> {
-        fn parse(tokens: &mut dyn Iterator<Item = char>) -> Result<Number> {
-            match tokens.next() {
-                Some('[') => Ok(Pair(box parse(tokens)?, box parse(tokens)?)),
-                Some(c) if c.is_digit(10) => Ok(Literal(c as u8 - b'0')),
-                Some(c) => Err(format!("unexpected token: {}", c).into()),
-                None => Err("missing token".into()),
-            }
-        }
-        parse(&mut s.chars().filter(|&c| c != ',' && c != ']'))
-    }
-}
-
 fn parse_input(input: &str) -> impl Iterator<Item = Result<Number>> + '_ {
-    input.lines().map(|l| l.parse::<Number>())
+    fn parse(tokens: &mut impl Iterator<Item = char>) -> Result<Number> {
+        match tokens.next() {
+            Some('[') => Ok(Pair(box parse(tokens)?, box parse(tokens)?)),
+            Some(c) => Ok(Literal(c as u8 - b'0')),
+            None => Err("missing token".into()),
+        }
+    }
+    input
+        .lines()
+        .map(|line| line.chars().filter(|&c| matches!(c, '0'..='9' | '[')))
+        .map(|mut tokens| parse(&mut tokens))
 }
 
 fn part1(input: &str) -> Result<u32> {
@@ -105,18 +98,10 @@ fn part1(input: &str) -> Result<u32> {
 }
 
 fn part2(input: &str) -> Result<u32> {
-    let numbers: Vec<_> = input.lines().map(|l| l.parse::<Number>()).collect::<Result<_>>()?;
-    numbers
-        .iter()
-        .enumerate()
-        .flat_map(|(i, lhs)| {
-            numbers
-                .iter()
-                .enumerate()
-                .filter(move |&(j, _)| i != j)
-                .map(move |(_, rhs)| (lhs, rhs))
-        })
-        .map(|(lhs, rhs)| Pair(box lhs.clone(), box rhs.clone()).reduce().magnitude())
+    let nums: Vec<_> = parse_input(input).collect::<Result<_>>()?;
+    (0..nums.len())
+        .flat_map(|i| (0..nums.len()).filter(move |&j| i != j).map(move |j| (i, j)))
+        .map(|(i, j)| Pair(box nums[i].clone(), box nums[j].clone()).reduce().magnitude())
         .max()
         .ok_or_else(|| "not found".into())
 }
