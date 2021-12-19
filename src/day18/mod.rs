@@ -2,6 +2,7 @@ use crate::{solution, Result};
 use std::str::FromStr;
 use Number::*;
 
+#[derive(Clone)]
 enum Number {
     Literal(u8),
     Pair(Box<Number>, Box<Number>),
@@ -9,13 +10,8 @@ enum Number {
 
 impl Number {
     fn reduce(mut self) -> Self {
-        match self.explode(0).0 {
-            true => self.reduce(),
-            false => match self.split() {
-                true => self.reduce(),
-                false => self,
-            },
-        }
+        while self.explode(0).0 || self.split() {}
+        self
     }
 
     fn explode(&mut self, depth: usize) -> (bool, u8, u8) {
@@ -98,23 +94,38 @@ impl FromStr for Number {
     }
 }
 
+fn parse_input(input: &str) -> impl Iterator<Item = Result<Number>> + '_ {
+    input.lines().map(|l| l.parse::<Number>())
+}
+
 fn part1(input: &str) -> Result<u32> {
-    Ok(input
-        .lines()
-        .map(|l| l.parse::<Number>())
+    Ok(parse_input(input)
         .try_fold(Literal(0), |acc, x| x.map(|x| Pair(box acc, box x).reduce()))?
         .magnitude())
 }
 
-fn part2(_input: &str) -> Result<usize> {
-    todo!()
+fn part2(input: &str) -> Result<u32> {
+    let numbers: Vec<_> = input.lines().map(|l| l.parse::<Number>()).collect::<Result<_>>()?;
+    numbers
+        .iter()
+        .enumerate()
+        .flat_map(|(i, lhs)| {
+            numbers
+                .iter()
+                .enumerate()
+                .filter(move |&(j, _)| i != j)
+                .map(move |(_, rhs)| (lhs, rhs))
+        })
+        .map(|(lhs, rhs)| Pair(box lhs.clone(), box rhs.clone()).reduce().magnitude())
+        .max()
+        .ok_or_else(|| "not found".into())
 }
 
-solution!(part1 => 4417, part2 => todo!());
+solution!(part1 => 4417, part2 => 4796);
 
 #[cfg(test)]
 mod example {
-    crate::test!(part1, t1: "
+    const EXAMPLE_INPUT: &str = "
 [[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]
 [[[5,[2,8]],4],[5,[[9,9],0]]]
 [6,[[[6,2],[5,6]],[[7,6],[4,7]]]]
@@ -125,5 +136,7 @@ mod example {
 [[9,3],[[9,9],[6,[4,9]]]]
 [[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]
 [[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]
-".trim() => 4140);
+";
+    crate::test!(part1, t1: EXAMPLE_INPUT.trim() => 4140);
+    crate::test!(part2, t1: EXAMPLE_INPUT.trim() => 3993);
 }
