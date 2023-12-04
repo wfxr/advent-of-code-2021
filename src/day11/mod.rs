@@ -26,6 +26,7 @@ fn parse_input(input: &str) -> Result<Octopuses> {
         .map_err(|_| format!("not a {N} x {N} array").into())
 }
 
+#[allow(clippy::filter_map_bool_then)]
 fn next_step(octopuses: &mut Octopuses) -> usize {
     octopuses.iter_mut().for_each(|x| *x += 1);
     (0..N * N)
@@ -33,6 +34,7 @@ fn next_step(octopuses: &mut Octopuses) -> usize {
         .sum()
 }
 
+#[allow(clippy::filter_map_bool_then)]
 fn flash(octopuses: &mut Octopuses, pos: usize) -> usize {
     octopuses[pos] = 0;
     1 + [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]

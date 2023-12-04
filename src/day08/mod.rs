@@ -22,6 +22,7 @@ fn part1(input: &str) -> Result<usize> {
         .count())
 }
 
+#[allow(clippy::redundant_closure_call)]
 fn part2(input: &str) -> Result<u32> {
     parse_input(input)?
         .into_iter()

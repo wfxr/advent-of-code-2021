@@ -6,7 +6,7 @@ macro_rules! test {
             use super::*;
             use super::super::SOLUTION;
             #[allow(unused_imports)]
-            use crate::input;
+            use $crate::input;
             $(
                 #[test]
                 fn $name() -> Result<(), Box<dyn std::error::Error>> {

@@ -44,7 +44,7 @@ impl Number {
                 10.. => {
                     let l = x / 2;
                     let r = x - l;
-                    *self = Pair(box Literal(l), box Literal(r));
+                    *self = Pair(Box::new(Literal(l)), Box::new(Literal(r)));
                     true
                 }
                 _ => false,
@@ -80,7 +80,7 @@ impl Number {
 fn parse_input(input: &str) -> impl Iterator<Item = Result<Number>> + '_ {
     fn parse(tokens: &mut impl Iterator<Item = char>) -> Result<Number> {
         match tokens.next() {
-            Some('[') => Ok(Pair(box parse(tokens)?, box parse(tokens)?)),
+            Some('[') => Ok(Pair(Box::new(parse(tokens)?), Box::new(parse(tokens)?))),
             Some(c) => Ok(Literal(c as u8 - b'0')),
             None => Err("missing token".into()),
         }
@@ -93,7 +93,9 @@ fn parse_input(input: &str) -> impl Iterator<Item = Result<Number>> + '_ {
 
 fn part1(input: &str) -> Result<u32> {
     Ok(parse_input(input)
-        .try_fold(Literal(0), |acc, x| x.map(|x| Pair(box acc, box x).reduce()))?
+        .try_fold(Literal(0), |acc, x| {
+            x.map(|x| Pair(Box::new(acc), Box::new(x)).reduce())
+        })?
         .magnitude())
 }
 
@@ -101,7 +103,11 @@ fn part2(input: &str) -> Result<u32> {
     let nums: Vec<_> = parse_input(input).collect::<Result<_>>()?;
     (0..nums.len())
         .flat_map(|i| (0..nums.len()).filter(move |&j| i != j).map(move |j| (i, j)))
-        .map(|(i, j)| Pair(box nums[i].clone(), box nums[j].clone()).reduce().magnitude())
+        .map(|(i, j)| {
+            Pair(Box::new(nums[i].clone()), Box::new(nums[j].clone()))
+                .reduce()
+                .magnitude()
+        })
         .max()
         .ok_or_else(|| "not found".into())
 }

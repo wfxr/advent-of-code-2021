@@ -1,11 +1,8 @@
-#![feature(drain_filter)]
-#![feature(bool_to_option)]
-#![feature(int_abs_diff)]
 #![feature(iter_intersperse)]
 #![feature(array_windows)]
-#![feature(explicit_generic_args_with_impl_trait)]
-#![feature(box_syntax)]
+#![feature(extract_if)]
 #![feature(test)]
+#![allow(clippy::get_first)]
 extern crate test;
 
 mod macros;

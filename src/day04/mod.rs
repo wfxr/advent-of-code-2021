@@ -7,7 +7,7 @@ struct Board([i32; N * N]);
 impl Board {
     fn mark(&mut self, x: u32) -> bool {
         (0..N * N)
-            .find_map(|i| (self.0[i] == x as i32).then_some(i))
+            .find(|&i| self.0[i] == x as i32)
             .map(|i| {
                 self.0[i] = -1;
                 self.row_marked(i / N) || self.col_marked(i % N)
@@ -54,7 +54,7 @@ fn part2(input: &str) -> Result<u32> {
 fn play(seq: Vec<u32>, mut remain: Vec<Board>, nth_won: usize) -> Result<u32> {
     let all = remain.len();
     seq.into_iter()
-        .find_map(|x| match remain.drain_filter(|board| board.mark(x)).last() {
+        .find_map(|x| match remain.extract_if(|board| board.mark(x)).last() {
             Some(board) => (all - remain.len() == nth_won).then(|| board.score(x)),
             None => None,
         })

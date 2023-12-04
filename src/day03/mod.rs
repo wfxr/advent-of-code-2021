@@ -25,7 +25,7 @@ fn part2(input: &str) -> Result<u32> {
                 (true, true) | (false, false) => b'1',
                 _ => b'0',
             };
-            seq = seq.into_iter().filter(|l| l.as_bytes()[col] == bit).collect();
+            seq.retain(|l| l.as_bytes()[col] == bit);
             col += 1;
         }
         Ok(u32::from_str_radix(seq.first().ok_or("empty input")?, 2)?)
